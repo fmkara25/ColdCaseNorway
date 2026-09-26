@@ -1,0 +1,60 @@
+# =========================
+# Frontend / Node
+# =========================
+node_modules/
+dist/
+.vite/
+*.local
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# =========================
+# .NET
+# =========================
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# =========================
+# IDE / Editors
+# =========================
+.vs/
+.idea/
+
+# Keep shared VS Code configuration if added later
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# =========================
+# Testing / Coverage
+# =========================
+coverage/
+TestResults/
+playwright-report/
+test-results/
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# Operating System
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Docker / Local data
+# =========================
+docker-data/
