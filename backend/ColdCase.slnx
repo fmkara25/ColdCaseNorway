@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="ColdCase.Api/ColdCase.Api.csproj" />
+  <Project Path="ColdCase.Application/ColdCase.Application.csproj" />
+  <Project Path="ColdCase.Domain/ColdCase.Domain.csproj" />
+  <Project Path="ColdCase.Infrastructure/ColdCase.Infrastructure.csproj" />
+  <Project Path="ColdCase.Tests/ColdCase.Tests.csproj" />
+</Solution>
