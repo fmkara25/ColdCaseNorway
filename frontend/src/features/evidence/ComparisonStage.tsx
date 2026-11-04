@@ -19,7 +19,7 @@ export function ComparisonStage({ caseId, primary, evidence }: { caseId:string; 
   const people = useQuery({ queryKey:["cases", caseId, "people"], queryFn: ({ signal }) => fetchJson<Person[]>(`/api${root}/people`, signal, isPeople) });
   const board = useQuery({ queryKey:["investigation", caseId], queryFn: ({ signal }) => readBoard(caseId, signal), enabled:progress.isSuccess,
     staleTime:0, refetchOnMount:"always", refetchOnWindowFocus:false });
-  const sources = comparisonSources(evidence, people.data ?? []);
+  const sources = comparisonSources(evidence, people.data ?? [], progress.isSuccess ? progress.data.history : []);
   const from = sources.find(item => item.id === `evidence:${primary.id}`)!;
   const targetId = search.get("with");
   const target = sources.find(item => item.id === targetId && item.id !== from.id);
