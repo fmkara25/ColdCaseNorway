@@ -19,7 +19,7 @@
 .chronology-paper { min-height:0; overflow:auto; padding:24px 30px; color:#332e24; background:linear-gradient(110deg,#ddd1b7,#e9dfca); }
 .chronology-paper .eyebrow { color:#786746; font-size:9px; }
 .chronology-paper h2 { margin:12px 0; font:25px Georgia,serif; }
-.chronology-paper>p:last-child { font:16px/1.8 Georgia,serif; white-space:pre-wrap; }
+.chronology-paper>p:last-child { color:#423b2e; font:16px/1.8 Georgia,serif; white-space:pre-wrap; }
 .chronology-source { min-height:0; overflow:auto; padding:24px; }
 .chronology-large-time { font:28px Georgia,serif; color:#d8bf91; }
 .chronology-source p { font-size:12px; line-height:1.7; }
