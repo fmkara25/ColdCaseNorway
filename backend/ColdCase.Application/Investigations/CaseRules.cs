@@ -6,8 +6,9 @@ using ColdCase.Domain.Investigations;
 namespace ColdCase.Application.Investigations;
 
 public sealed record RequiredLink(string FromId, string ToId);
+public sealed record InterviewApproach(string Id, string Label, string Opening);
 public sealed record ActionRule(string[] RequiredFlags, string[] Grants, RequiredLink[] Links,
-    string[]? Route = null, int? RouteWindowMinutes = null);
+    string[]? Route = null, int? RouteWindowMinutes = null, InterviewApproach[]? Approaches = null);
 public sealed record GameMaterials(IReadOnlyList<Person> People, IReadOnlyList<Evidence> Evidence,
     IReadOnlyList<TimelineEvent> Timeline, MapGraph Map);
 public interface IGameplayRepository
@@ -27,7 +28,15 @@ public static class CaseRules
         return !flags.Contains("action:" + action.Id) && rule.RequiredFlags.All(flags.Contains) && rule.Links.All(link =>
             board.Connections.Any(c => (c.FromId == link.FromId && c.ToId == link.ToId) || (c.FromId == link.ToId && c.ToId == link.FromId)));
     }
-    public static string[]? Complete(CaseAction action, string[] currentFlags, BoardState board, MapGraph visibleMap, string[]? route)
+    public static string ChoiceFlag(string actionId, string approachId) => $"choice:{actionId}:{approachId}";
+    public static InterviewApproach? SelectedApproach(CaseAction action, IReadOnlySet<string> flags) =>
+        Rule(action).Approaches?.SingleOrDefault(option => flags.Contains(ChoiceFlag(action.Id, option.Id)));
+    public static string Response(CaseAction action, IReadOnlySet<string> flags)
+    {
+        var opening = SelectedApproach(action, flags)?.Opening;
+        return string.IsNullOrWhiteSpace(opening) ? action.Response : opening + "\n\n" + action.Response;
+    }
+    public static string[]? Complete(CaseAction action, string[] currentFlags, BoardState board, MapGraph visibleMap, string[]? route, string? approachId = null)
     {
         if (!Available(action, currentFlags.ToHashSet(), board)) return null;
         var rule = Rule(action);
@@ -37,6 +46,12 @@ public static class CaseRules
             var estimate = RouteEstimator.Estimate(visibleMap, route);
             if (estimate is null || rule.RouteWindowMinutes is null || estimate.DriveMinutesMin <= rule.RouteWindowMinutes) return null;
         }
-        return currentFlags.Concat(rule.Grants).Append("action:" + action.Id).Distinct().ToArray();
+        var options = rule.Approaches ?? [];
+        // Old clients use the first authored approach. Existing completed saves are never rewritten.
+        var selected = options.Length > 0 ? options.SingleOrDefault(option => option.Id == (approachId ?? options[0].Id)) : null;
+        if ((options.Length > 0 && selected is null) || (options.Length == 0 && approachId is not null)) return null;
+        var next = currentFlags.Concat(rule.Grants).Append("action:" + action.Id);
+        if (selected is not null) next = next.Append(ChoiceFlag(action.Id, selected.Id));
+        return next.Distinct().ToArray();
     }
 }

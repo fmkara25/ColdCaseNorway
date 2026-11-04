@@ -29,6 +29,7 @@ test("case branches progress through reviewed evidence, saved links and verified
   await connect("person:maria", "evidence:ingrid-note");
   await page.goto("/cases/1999-1218/people/maria");
   await page.getByRole("button", { name: "Spør om notatet og den avtalte bagen" }).click();
+  await page.getByRole("button", { name: "Gi Maria rom til å forklare" }).click();
   await expect(page.locator(".action-history")).toContainText("Bagen ble stående igjen");
   await connect("evidence:phone-match", "evidence:jonas-statement");
   await action("jonas-call");

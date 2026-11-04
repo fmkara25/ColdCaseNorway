@@ -48,6 +48,11 @@ public static class CaseSeed
         archive.MissingPersonPortraitPath = "/images/ingrid-1999.webp";
         var missingPerson = await database.People.SingleAsync(x => x.CaseId == "1999-1218" && x.Id == "ingrid");
         missingPerson.PortraitImagePath = archive.MissingPersonPortraitPath;
+        foreach (var id in new[] { "maria", "erik", "jonas" })
+        {
+            var person = await database.People.SingleAsync(x => x.CaseId == "1999-1218" && x.Id == id);
+            person.PortraitImagePath = $"/images/{id}-1999.webp";
+        }
         await database.SaveChangesAsync();
     }
 }

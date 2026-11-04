@@ -91,4 +91,26 @@ public sealed class CasePersistenceTests
         Assert.Contains("Persisted note", closed.BoardJson);
         Assert.Null(await repository.FindAsync("missing-case", CancellationToken.None));
     }
+
+    [Theory]
+    [InlineData("open")]
+    [InlineData("document")]
+    public async Task StoredInterviewChoiceSurvivesContentReseeding(string choice)
+    {
+        var connection = Environment.GetEnvironmentVariable("TEST_DATABASE_CONNECTION");
+        Assert.False(string.IsNullOrWhiteSpace(connection));
+        await using var database = new CaseDbContext(new DbContextOptionsBuilder<CaseDbContext>().UseNpgsql(connection).Options);
+        await database.Database.MigrateAsync();
+        await CaseSeed.InitializeDevelopmentAsync(database);
+        var repository = new InvestigationRepository(database);
+        var access = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+        var row = new Investigation { Id = Guid.NewGuid(), CaseId = "1999-1218", AccessHash = access,
+            CreatedAt = DateTimeOffset.UtcNow, BoardJson = JsonSerializer.Serialize(BoardState.Empty) };
+        await repository.CreateAsync(row, CancellationToken.None);
+        var flags = JsonSerializer.Serialize(new[] { "action:maria-plan", CaseRules.ChoiceFlag("maria-plan", choice) });
+        Assert.True(await repository.SaveProgressAsync(row.Id, row.CaseId, access, 0, flags, CancellationToken.None));
+        await CaseSeed.InitializeDevelopmentAsync(database);
+        var saved = await repository.ReadAsync(row.CaseId, access, CancellationToken.None);
+        Assert.NotNull(saved); Assert.Equal(1, saved.Version); Assert.Equal(flags, saved.ProgressJson);
+    }
 }

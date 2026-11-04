@@ -89,7 +89,9 @@ jobs:
         if: always()
         with:
           name: desk-visual-review
-          path: frontend/test-results/desk-*/**/*.png
+          path: |
+            frontend/test-results/desk-*/**/*.png
+            frontend/test-results/interviews-*/**/*.png
           if-no-files-found: ignore
           retention-days: 7
       - name: Container diagnostics

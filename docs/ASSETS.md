@@ -26,3 +26,15 @@ Nullable case/person image paths are stored in PostgreSQL and allowlisted in pub
 `features/atmosphere/audio.ts` synthesizes a quiet, low-pass room/wind texture and short high-pass paper cues from a seeded noise buffer using Web Audio. There is no recording, music, speech or dependency on sound to solve the case. AudioContext is created only after the player presses **Slå på lyd**. Sound starts off on every reload; volume and room/paper toggles are session-local. Leaving the tab mutes and requires explicit reactivation, and leaving the workstation closes the context. Unsupported audio fails silently with a Bokmål status message, while gameplay continues.
 
 Unit tests cover consent/resource creation, gain limits, independent cue settings and delayed-resume cancellation. Browser checks cover real Chromium context activation/suspension, default-off reload and unsupported audio. Visibility changes are simulated deterministically in headless Chromium; perceptual loudness/comfort and OS background behavior still require human listening on target devices. There is no claim of audio production/mastering quality based on automated tests.
+
+## Opening-person portraits (2026-11-04)
+
+Added `maria-1999.webp`, `erik-1999.webp` and `jonas-1999.webp` under `frontend/public/images`. These are original fictional illustrations, generated during development with the built-in OpenAI image tool, then encoded to WebP quality 82 without semantic edits. They convey no clue or implication of guilt. They are assigned by PostgreSQL person metadata; the original Ingrid portrait is preserved. No portrait of an undiscovered person is added to the public bundle.
+
+Shared prompt: Use case: photorealistic-natural. Asset type: fictional character illustration for Cold Case Norway, a serious Norwegian investigation game. Create ONE vertical head-and-shoulders amateur consumer 35mm colour family photograph from 1999, scanned print, subtle grain and slight softness, realistic natural skin and ordinary imperfections, plain softly blurred wooden indoor background. Centered, modest headroom, full image to edges, neutral gently attentive expression, soft daylight, muted natural colours, restrained archive quality. Wholly fictional adult, no known person's likeness. No text, dates, frame, watermarks, police symbols, evidence, clues, objects in hands, visible rings, sinister expression, glamour, dramatic cinematic lighting or implication of guilt. Appearance is illustrative and conveys no factual clue.
+
+Subject additions:
+
+- Maria: fictional 23-year-old Norwegian woman Maria Nygård, short dark blonde bob, simple moss-grey knitted sweater, understated natural look. Distinct face and hair from the game's brown-haired Ingrid.
+- Erik: fictional 26-year-old Norwegian man Erik Halvorsen, short light brown hair, clean shaven, ordinary dark blue crewneck sweater, natural unposed everyday portrait.
+- Jonas: fictional 31-year-old Norwegian man Jonas Mikkelsen, short medium brown hair, clean shaven, ordinary grey button-up shirt with collar open, no uniform, natural everyday portrait.

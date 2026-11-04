@@ -20,8 +20,10 @@ public static class GameplayEndpoints
             row.Version, isReconstructed = set.Contains("stage:closed"),
             reviewedEvidenceIds = flags.Where(x => x.StartsWith("review:")).Select(x => x[7..]),
             actions = actions.Where(x => CaseRules.Available(x, set, board)).Select(x => new
-                { x.Id, x.Kind, x.PersonId, x.Label, requiresRoute = CaseRules.Rule(x).Route is not null }),
-            history = flags.Where(lookup.ContainsKey).Select(key => lookup[key]).Select(x => new { x.Id, x.PersonId, x.Label, x.Response })
+                { x.Id, x.Kind, x.PersonId, x.Label, requiresRoute = CaseRules.Rule(x).Route is not null,
+                    approaches = (CaseRules.Rule(x).Approaches ?? []).Select(option => new { option.Id, option.Label }) }),
+            history = flags.Where(lookup.ContainsKey).Select(key => lookup[key]).Select(x => new { x.Id, x.PersonId, x.Label, response = CaseRules.Response(x, set),
+                approach = CaseRules.SelectedApproach(x, set) is { } selected ? new { selected.Id, selected.Label } : null })
         });
     }
     public static void MapGameplayEndpoints(this WebApplication app)
@@ -62,12 +64,20 @@ public static class GameplayEndpoints
             var actions = await game.ActionsAsync(id, cancellationToken);
             var action = actions.SingleOrDefault(x => x.Id == actionId);
             if (action is null) return Closed();
-            if (flags.Contains("action:" + actionId)) return await View(row, game, cancellationToken);
+            if (flags.Contains("action:" + actionId))
+            {
+                var selected = CaseRules.SelectedApproach(action, flags.ToHashSet());
+                if (request.ApproachId is not null && request.ApproachId != selected?.Id)
+                    return Results.Problem(statusCode: 409, title: "Tilnærmingen er allerede registrert. Oppdater samtalen.");
+                return await View(row, game, cancellationToken);
+            }
             var board = JsonSerializer.Deserialize<BoardState>(row.BoardJson, CaseRules.Json) ?? BoardState.Empty;
             if (!CaseRules.Available(action, flags.ToHashSet(), board)) return Closed();
+            if (request.ExpectedVersion is { } expected && expected != row.Version)
+                return Results.Problem(statusCode: 409, title: "Etterforskningen er endret. Oppdater samtalen før du velger.");
             var materials = await game.MaterialsAsync(id, flags.ToHashSet(), cancellationToken);
-            var next = CaseRules.Complete(action, flags, board, materials.Map, request.LocationIds);
-            if (next is null) return Results.Problem(statusCode: 400, title: "Den valgte ruten støtter ikke denne vurderingen.");
+            var next = CaseRules.Complete(action, flags, board, materials.Map, request.LocationIds, request.ApproachId);
+            if (next is null) return Results.Problem(statusCode: 400, title: "Valget eller ruten er ikke tilgjengelig for denne undersøkelsen.");
             var json = JsonSerializer.Serialize(next, CaseRules.Json);
             if (!await investigations.SaveProgressAsync(row.Id, id, row.AccessHash, row.Version, json, cancellationToken))
                 return Results.Problem(statusCode: 409, title: "Etterforskningen er endret. Last inn opplysningene og prøv igjen.");
@@ -76,4 +86,4 @@ public static class GameplayEndpoints
         });
     }
 }
-public sealed record ActionRequest(string[]? LocationIds);
+public sealed record ActionRequest(string[]? LocationIds, string? ApproachId = null, int? ExpectedVersion = null);
