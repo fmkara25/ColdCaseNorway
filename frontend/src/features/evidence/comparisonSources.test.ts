@@ -9,6 +9,8 @@ const history:ActionHistory[] = [{ id:"done", personId:"maria", label:"Et stilt 
 it("includes only the selected person's completed replies with the recorded approach", () => {
   const before = structuredClone(history);
   const source = comparisonSources([], [person], history)[0];
+  expect(source.hasConversation).toBe(true);
+  expect(source.body.indexOf(history[0].response)).toBeLessThan(source.body.indexOf(person.introduction));
   expect(source.body).toContain(person.introduction);
   expect(source.body).toContain(history[0].response);
   expect(source.body).toContain("Din tilnærming: La henne forklare");
