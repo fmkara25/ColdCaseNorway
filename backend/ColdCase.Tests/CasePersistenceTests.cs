@@ -22,7 +22,7 @@ public sealed class CasePersistenceTests
         Assert.False(database.Database.HasPendingModelChanges());
         var repository = new CaseRepository(database);
         var cases = await repository.ListAsync(CancellationToken.None);
-        Assert.Single(cases.Where(x => x.Id == "1999-1218"));
+        Assert.Single(cases, x => x.Id == "1999-1218");
         var file = await repository.FindAsync("1999-1218", CancellationToken.None);
         Assert.NotNull(file);
         Assert.Equal("Ingrid Solberg", file.MissingPerson);

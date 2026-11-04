@@ -9,11 +9,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <WarningsAsErrors>$(WarningsAsErrors);NU1902;NU1903;NU1904</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+    <!-- Patch transitive design-tool crypto dependencies; keep them private to this project. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.14" PrivateAssets="all" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

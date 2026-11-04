@@ -8,6 +8,7 @@ Scope: initial archive/overview slice only. No next-stage gameplay or deployment
 - High: EnsureCreated had no schema upgrade history. Replaced it with a committed initial migration and snapshot, pinned EF tooling, design-time factory and CI drift/script checks. Development migrates automatically; production requires reviewed deployment SQL. Legacy databases need a verified baseline or a non-destructive copy to a new migrated database; documented without deleting data.
 - Medium: frontend trusted JSON shape and dates. Added runtime validation and malformed-payload tests. Missing-case responses now lead back to the archive, and 4xx errors are not retried automatically.
 - Medium: server errors had no explicit stable Bokmål contract. Added sanitized ProblemDetails responses and a failure test; private exception text is not returned. API responses carry no-store and nosniff headers.
+- High: NuGet audit identified vulnerable transitive crypto packages in the initial EF design tooling. Updated EF design/CLI to 10.0.14, pinned patched private crypto dependencies and made moderate/high/critical audit findings fail the infrastructure build.
 - Low: a case-specific question was hardcoded into the generic overview. Replaced with a neutral question without adding a story fact.
 
 ## Story Bible and limitations
