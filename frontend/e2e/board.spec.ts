@@ -13,6 +13,7 @@ test("board saves moved cards, notes and links to PostgreSQL and isolates anothe
   await page.getByLabel("Beskrivelse", { exact: true }).fill("Planlagt reise");
   await page.getByRole("button", { name: "Opprett forbindelse" }).click();
   const drag = page.getByRole("button", { name: "Flytt Ingrid Solberg", exact: true });
+  await drag.scrollIntoViewIfNeeded();
   const box = await drag.boundingBox();
   if (!box) throw new Error("Card is not visible");
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
