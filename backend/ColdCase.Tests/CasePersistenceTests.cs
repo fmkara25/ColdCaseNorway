@@ -111,6 +111,6 @@ public sealed class CasePersistenceTests
         Assert.True(await repository.SaveProgressAsync(row.Id, row.CaseId, access, 0, flags, CancellationToken.None));
         await CaseSeed.InitializeDevelopmentAsync(database);
         var saved = await repository.ReadAsync(row.CaseId, access, CancellationToken.None);
-        Assert.NotNull(saved); Assert.Equal(1, saved.Version); Assert.Equal(flags, saved.ProgressJson);
+        Assert.NotNull(saved); Assert.Equal(1, saved.Version); Assert.Equal(CaseRules.ReadFlags(flags), CaseRules.ReadFlags(saved.ProgressJson));
     }
 }

@@ -83,7 +83,7 @@ public sealed class CaseRulesTests
         var next = CaseRules.Complete(action, original, board, Case01MapSeed.CreateGraph(), null, choice)!;
         Assert.Contains("evidence:travel-bag", next);
         Assert.Contains(CaseRules.ChoiceFlag(action.Id, choice), next);
-        Assert.Single(next.Where(flag => flag.StartsWith("choice:")));
+        Assert.Single(next, flag => flag.StartsWith("choice:"));
         var flags = next.Append("review:travel-bag").ToHashSet();
         Assert.True(CaseRules.Available(actions.Single(x => x.Id == unlocked), flags, board));
         Assert.False(CaseRules.Available(actions.Single(x => x.Id == blocked), flags, board));
