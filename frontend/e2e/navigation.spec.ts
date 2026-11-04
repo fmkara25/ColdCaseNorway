@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("keyboard users can skip navigation and focus follows completed page changes", async ({ page }) => {
+test("keyboard users can skip navigation and focus follows completed page changes", async ({ page, context }) => {
   await page.goto("/");
   await page.keyboard.press("Tab");
   const skip = page.getByRole("link", { name:"Hopp til innhold" });
@@ -19,8 +19,13 @@ test("keyboard users can skip navigation and focus follows completed page change
   const input = page.getByRole("textbox").first();
   await input.fill("Arbeidsnotat");
   await expect(input).toBeFocused();
-  await page.reload();
-  await page.keyboard.press("Tab"); await expect(skip).toBeFocused();
+  // A reload may restore native input focus; a fresh document must retain normal tab order.
+  const fresh = await context.newPage();
+  await fresh.goto("/cases/1999-1218/people");
+  await expect(fresh.getByRole("heading", { name:"Personer", exact:true })).toBeVisible();
+  await fresh.keyboard.press("Tab");
+  await expect(fresh.getByRole("link", { name:"Hopp til innhold" })).toBeFocused();
+  await fresh.close();
 });
 
 test("unexpected render failures show safe Bokmål recovery and reload restores the archive", async ({ page }) => {
