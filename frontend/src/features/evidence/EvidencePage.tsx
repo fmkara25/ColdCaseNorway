@@ -30,7 +30,7 @@ export function EvidencePage() {
     </section><section aria-label="Dokumentvisning">
       {selected ? <>
         <div className="document-toolbar"><button onClick={() => { setZoom(100); dialog.current?.showModal(); }}>Forstørr dokument</button>
-          <button disabled={progress.isPending || review.isPending || reviewed?.includes(selected.id)} onClick={() => review.mutate(selected.id)}>{reviewed?.includes(selected.id) ? "Gjennomgått" : "Marker som gjennomgått"}</button></div>
+          <button disabled={progress.isPending || review.isPending || reviewed?.includes(selected.id)} onClick={() => review.mutate(selected.id)}>{review.isPending ? "Registrerer …" : reviewed?.includes(selected.id) ? "Gjennomgått" : "Marker som gjennomgått"}</button></div>
         {(progress.isError || review.isError) && <div role="alert"><p>{review.error?.message ?? "Kunne ikke åpne lagringen for etterforskningen."}</p><button onClick={() => { review.reset(); void progress.refetch(); }}>Prøv igjen</button></div>}
         <Document evidence={selected} />
         <dialog ref={dialog} className="document-dialog" aria-label="Forstørret dokument">

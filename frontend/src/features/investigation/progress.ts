@@ -25,7 +25,7 @@ export function useProgress(caseId: string) {
 }
 export async function progressCommand(caseId: string, path: string, locationIds?: string[]): Promise<Progress> {
   const response = await fetch(`/api/cases/${encodeURIComponent(caseId)}/investigation/${path}`, {
-    method: "POST", credentials: "same-origin", headers: { "X-ColdCase-Request": "1", "Content-Type": "application/json" }, body: JSON.stringify({ locationIds: locationIds ?? null }),
+    method: "POST", credentials: "same-origin", keepalive: true, headers: { "X-ColdCase-Request": "1", "Content-Type": "application/json" }, body: JSON.stringify({ locationIds: locationIds ?? null }),
   });
   if (!response.ok) {
     const error = new ApiError(response.status);
