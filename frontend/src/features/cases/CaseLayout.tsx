@@ -24,7 +24,7 @@ export function CaseLayout() {
         <NavLink to="reconstruction" className={({ isActive }) => isActive ? "nav-active" : ""}>REKONSTRUKSJON</NavLink>
       </nav><Link className="back-link" to="/">← Saksarkiv</Link>
     </aside>
-    <main className="workspace"><header className="workspace-header"><span>SAK / {caseId}</span><SoundControls /><span className="status">{progress.data?.isReconstructed ? "Rekonstruert" : "Uoppklart"}</span></header>
+    <main id="main-content" tabIndex={-1} className="workspace" aria-label="Etterforskningsområde"><header className="workspace-header"><span>SAK / {caseId}</span><SoundControls /><span className="status">{progress.data?.isReconstructed ? "Rekonstruert" : "Uoppklart"}</span></header>
       {query.isPending || query.isError ? <Feedback error={query.error} retry={() => { void query.refetch(); }} /> : <Outlet context={query.data} />}
     </main>
   </div></SoundProvider>;

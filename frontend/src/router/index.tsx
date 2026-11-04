@@ -1,3 +1,5 @@
+import { RouteFrame } from "./RouteFrame";
+import { RouteError } from "./RouteError";
 import { createBrowserRouter, Link } from "react-router-dom";
 import { CaseLayout } from "../features/cases/CaseLayout";
 import { PeoplePage } from "../features/people/PeoplePage";
@@ -9,7 +11,7 @@ import { ReconstructionPage } from "../features/reconstruction/ReconstructionPag
 import App from "../App";
 import { CaseOverview } from "../features/cases/CasePages";
 
-export const router = createBrowserRouter([
+export const router = createBrowserRouter([{ element: <RouteFrame />, errorElement: <RouteError />, children: [
   { path: "/", element: <App /> },
   { path: "/cases/:caseId", element: <CaseLayout />, children: [
     { index: true, element: <CaseOverview /> },
@@ -23,5 +25,5 @@ export const router = createBrowserRouter([
     { path: "people", element: <PeoplePage /> },
     { path: "people/:personId", element: <PeoplePage /> },
   ] },
-  { path: "*", element: <main className="feedback"><h1>Siden finnes ikke.</h1><Link to="/">Til saksarkivet</Link></main> },
-]);
+  { path: "*", element: <main id="main-content" tabIndex={-1} className="feedback"><h1>Siden finnes ikke.</h1><Link to="/">Til saksarkivet</Link></main> },
+] }]);

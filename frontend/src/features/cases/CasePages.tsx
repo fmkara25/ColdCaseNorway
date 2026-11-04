@@ -13,7 +13,7 @@ export function Feedback({ error, retry }: { error?: Error | null; retry: () => 
 
 export function CaseArchive() {
   const query = useQuery({ queryKey: ["cases"], queryFn: ({ signal }) => fetchJson<CaseSummary[]>("/api/cases", signal, isCaseList) });
-  return <main className="archive">
+  return <main id="main-content" tabIndex={-1} className="archive" aria-label="Saksarkiv">
     <header className="masthead"><Link to="/">COLD CASE <span>NORWAY</span></Link><span>ETTERFORSKNINGSARKIV</span></header>
     <div className="archive-heading"><p className="eyebrow">GJENÅPNEDE SAKER</p><h1>Det som ennå ikke er forklart.</h1><p>Gå tilbake til kildene. Undersøk sporene. Bygg en forklaring.</p></div>
     {query.isPending || query.isError ? <Feedback error={query.error} retry={() => { void query.refetch(); }} /> :
