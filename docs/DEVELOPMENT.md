@@ -138,3 +138,13 @@ Browser acceptance checks exercise keyboard skip/navigation focus, active naviga
 ## Built-container validation
 
 CI also builds both application Dockerfiles, checks non-root runtime users, starts the local Compose stack against an isolated database volume, verifies SPA/API/static-asset routing and saves a synthetic note. It then recreates the stack without deleting that volume and verifies the same cookie can recover the note. All browser scenarios run again against the built frontend and reverse proxy using `playwright.container.config.ts`. Local playtest containers explicitly use Development mode for migrations, seed and HTTP guest cookies; this configuration is not an internet deployment.
+
+## Investigation desk — approved UX migration, stage 1
+
+The case landing route now presents a fixed-viewport desk and a focused document/decision modal. Papers, source text, portraits and currently available follow-ups come from the existing authorized API responses; no Case 01 story or solution is hardcoded into the desk. Three documents are shown per tray with explicit paging, not viewport scrolling. Documents have their own scroll/zoom pane. Native dialogs provide keyboard containment, Escape and return to the selected object.
+
+Taking a source into consideration uses the existing server review command; it does not certify that the source is true. Available research uses existing action IDs and unlock rules. Successful actions display their authored response and newly accessible evidence/person objects before returning to the desk. Progress and material authorization remain server-side, and existing saves/migrations are unchanged. New discoveries are not preloaded as hidden client-side content.
+
+The old category sidebar is replaced by a secondary Mappen drawer. Existing people/evidence/timeline/map/board/notes/reconstruction routes are preserved inside an independently scrollable tool window during the staged redesign. Those tools have not yet received the desk interaction treatment. The archive entry remains unchanged. There are no new persistent dialogue approaches or consequence mechanics in this stage: those require a later reviewed server-side model, not a cosmetic frontend claim.
+
+Acceptance checks cover 1366×768, 1920×1080 and 390×844 outer viewport bounds, document-only scrolling/zoom, keyboard dialog return, a source-to-research-to-new-object flow, persisted review/action history and hidden late evidence. Container CI retains desk/inspection screenshots for visual review. Full-case, anonymous isolation, unsaved-board and sound checks continue to run against both development and compiled container stacks. Human approval of the first playable desk is required before proceeding to the larger interview/choice redesign.

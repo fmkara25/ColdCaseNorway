@@ -40,6 +40,7 @@ test("leaving an unsaved board requires an explicit choice", async ({ page }) =>
   await page.goto("/cases/1999-1218/board");
   await page.getByLabel("Notattekst", { exact: true }).fill("Ulagret hypotese");
   await page.getByRole("button", { name: "Legg til notat", exact: true }).click();
+  await page.getByText("Mappen", { exact:true }).click();
   await page.getByRole("link", { name: "OVERSIKT", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Ulagrede endringer" });
   await expect(dialog).toBeVisible();

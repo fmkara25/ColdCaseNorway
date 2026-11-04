@@ -100,7 +100,7 @@ test("case branches progress through reviewed evidence, saved links and verified
   await expect(page.locator(".epilogue")).toContainText("Ingrid ble ikke funnet");
   await page.reload();
   await expect(page.getByRole("heading", { name: "Rekonstruksjon levert" })).toBeVisible();
-  await expect(page.locator(".workspace-header .status")).toHaveText("Rekonstruert");
+  await expect(page.getByRole("banner").locator(".status")).toHaveText("Rekonstruert");
   const completedAgain = await page.request.post(session + "/reconstruction", { headers, data: { answers, evidenceIds, routeIds } });
   expect((await completedAgain.json()).accepted).toBeTruthy();
   const fresh = await browser.newContext({ baseURL });
