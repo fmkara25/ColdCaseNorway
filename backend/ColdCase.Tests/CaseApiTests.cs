@@ -1,4 +1,7 @@
 using System.Net;
+using System.Net.Http.Json;
+using ColdCase.Application.Maps;
+using ColdCase.Infrastructure.Persistence;
 using System.Text.Json;
 using ColdCase.Application.Cases;
 using ColdCase.Domain.Cases;
@@ -105,6 +108,36 @@ public sealed class CaseApiTests
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
     }
 
+    [Fact]
+    public async Task MapResponseAndRouteEstimatesCannotRevealHiddenLocations()
+    {
+        using var factory = new ApiFactory(false);
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/api/cases/1999-1218/map");
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("mill-road", body);
+        Assert.DoesNotContain("station", body);
+        Assert.DoesNotContain("IsInitiallyVisible", body, StringComparison.OrdinalIgnoreCase);
+        using var json = JsonDocument.Parse(body);
+        Assert.Equal(3, json.RootElement.GetProperty("locations").GetArrayLength());
+        using var route = await client.PostAsJsonAsync("/api/cases/1999-1218/map/estimate", new { locationIds = new[] { "hotel", "market", "bus-stop" } });
+        route.EnsureSuccessStatusCode();
+        using var estimate = JsonDocument.Parse(await route.Content.ReadAsStringAsync());
+        Assert.Equal(1500, estimate.RootElement.GetProperty("meters").GetInt32());
+        using var hidden = await client.PostAsJsonAsync("/api/cases/1999-1218/map/estimate", new { locationIds = new[] { "market", "mill-road" } });
+        Assert.Equal(HttpStatusCode.BadRequest, hidden.StatusCode);
+        Assert.DoesNotContain("mill-road", await hidden.Content.ReadAsStringAsync());
+        using var unknown = await client.GetAsync("/api/cases/unknown/map");
+        Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
+    }
+
+    private sealed class StubMapRepository : IMapRepository
+    {
+        public Task<MapGraph> ReadAsync(string caseId, CancellationToken cancellationToken) =>
+            Task.FromResult(Case01MapSeed.CreateGraph());
+    }
+
     private sealed class ApiFactory(bool fail) : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -113,6 +146,8 @@ public sealed class CaseApiTests
             builder.UseSetting("ConnectionStrings:ColdCase", "Host=localhost;Database=unused;Username=unused");
             builder.ConfigureServices(services =>
             {
+                services.RemoveAll<IMapRepository>();
+                services.AddSingleton<IMapRepository>(new StubMapRepository());
                 services.RemoveAll<ICaseRepository>();
                 services.AddSingleton<ICaseRepository>(new StubRepository(fail));
             });

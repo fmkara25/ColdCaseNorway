@@ -41,6 +41,10 @@ public sealed class CasePersistenceTests
         Assert.All(events.Where(x => x.SourceEvidenceId is not null), item =>
             Assert.Contains(evidence, source => source.Id == item.SourceEvidenceId));
         Assert.Empty(await repository.ListTimelineAsync("other-case", CancellationToken.None));
+        var map = (await new MapRepository(database).ReadAsync("1999-1218", CancellationToken.None)).OpeningOnly("1999-1218");
+        Assert.Equal(3, map.Locations.Count); Assert.Equal(2, map.Roads.Count);
+        var emptyMap = await new MapRepository(database).ReadAsync("another-case", CancellationToken.None);
+        Assert.Empty(emptyMap.Locations); Assert.Empty(emptyMap.Roads);
         Assert.Null(await repository.FindAsync("missing-case", CancellationToken.None));
     }
 }

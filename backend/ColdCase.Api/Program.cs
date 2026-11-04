@@ -1,4 +1,6 @@
 using ColdCase.Application.Cases;
+using ColdCase.Application.Maps;
+using ColdCase.Api.Maps;
 using ColdCase.Api.Contracts;
 using ColdCase.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +12,7 @@ builder.Services.AddDbContext<CaseDbContext>(options => options.UseNpgsql(
     builder.Configuration.GetConnectionString("ColdCase")
     ?? throw new InvalidOperationException("ConnectionStrings:ColdCase is required.")));
 builder.Services.AddScoped<ICaseRepository, CaseRepository>();
+builder.Services.AddScoped<IMapRepository, MapRepository>();
 
 var app = builder.Build();
 app.UseExceptionHandler(handler => handler.Run(async context =>
@@ -66,6 +69,7 @@ app.MapGet("/api/cases/{id}/timeline", async (string id, ICaseRepository cases, 
     return Results.Ok(events.Where(x => x.IsInitiallyVisible).Select(x => new
         { x.Id, x.Title, x.Description, x.SourceEvidenceId, x.MinuteOfDay, x.IsEstimate, x.IsPlanned }));
 });
+app.MapCaseMapEndpoints();
 app.Run();
 
 public partial class Program { }

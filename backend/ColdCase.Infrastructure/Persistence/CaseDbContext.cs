@@ -1,4 +1,5 @@
 using ColdCase.Domain.Cases;
+using ColdCase.Domain.Maps;
 using Microsoft.EntityFrameworkCore;
 
 namespace ColdCase.Infrastructure.Persistence;
@@ -13,8 +14,25 @@ public sealed class CaseDbContext(DbContextOptions<CaseDbContext> options) : DbC
 
     public DbSet<TimelineEvent> TimelineEvents => Set<TimelineEvent>();
 
+    public DbSet<MapLocation> MapLocations => Set<MapLocation>();
+    public DbSet<MapRoad> MapRoads => Set<MapRoad>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var location = modelBuilder.Entity<MapLocation>();
+        location.HasKey(x => new { x.CaseId, x.Id });
+        location.Property(x => x.CaseId).HasMaxLength(32);
+        location.Property(x => x.Id).HasMaxLength(64);
+        location.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        location.HasOne<CaseFile>().WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
+        var road = modelBuilder.Entity<MapRoad>();
+        road.HasKey(x => new { x.CaseId, x.Id });
+        road.Property(x => x.CaseId).HasMaxLength(32);
+        road.Property(x => x.Id).HasMaxLength(64);
+        road.Property(x => x.FromLocationId).HasMaxLength(64).IsRequired();
+        road.Property(x => x.ToLocationId).HasMaxLength(64).IsRequired();
+        road.HasOne<MapLocation>().WithMany().HasForeignKey(x => new { x.CaseId, x.FromLocationId }).OnDelete(DeleteBehavior.Restrict);
+        road.HasOne<MapLocation>().WithMany().HasForeignKey(x => new { x.CaseId, x.ToLocationId }).OnDelete(DeleteBehavior.Restrict);
         var timeline = modelBuilder.Entity<TimelineEvent>();
         timeline.HasKey(x => new { x.CaseId, x.Id });
         timeline.Property(x => x.CaseId).HasMaxLength(32);
