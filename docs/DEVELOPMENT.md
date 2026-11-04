@@ -2,9 +2,9 @@
 
 ## Current slice
 
-Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
+Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline → interactive schematic map/route estimator. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
 
-This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, evidence unlock rules, interviews, map routes, board, notes, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
+This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, evidence unlock rules, interviews, later map unlocks, board, notes, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
 
 ## Local startup (PowerShell, repository root)
 
@@ -88,3 +88,12 @@ Opening evidence exposes only six initial archive extracts. Reading marks use Zu
 
 
 The opening timeline distinguishes approximate observations, the unknown interval and the scheduled bus; selecting two known times measures an interval without asserting the travel actually happened. Source links point to accessible opening evidence and are checked by persistence tests. No late-game route or accident timestamps are returned.
+
+
+## Map and consistency model
+
+Map locations and bidirectional roads are case-scoped PostgreSQL entities, with composite foreign keys preventing roads between different cases. Opening responses allowlist public fields and exclude undiscovered places/roads. The route API accepts only IDs, reconstructs distances/times on the server and rejects disconnected or undiscovered paths. It is a stateless read-only calculation, not a progress mutation or proof that someone travelled a route.
+
+The map is deliberately schematic and not to geographic scale; road distances are authoritative. No external map service or paid provider is used. Walking and winter-driving intervals are authored design estimates, not measured historical travel times. RouteConsistencyTests validate positive/ordered estimates, graph connectivity, the opening walking window, odometer tolerance and later chronology/alibi constraints. They establish internal consistency under these assumptions, not empirical realism.
+
+Following author authorization to revise details for consistency, the previous proposed 43.4 km route was replaced by a 43.2 km model. Its critical pickup-to-transaction section permits up to 25 minutes driving plus an explicit 8-minute stop allowance inside 36 minutes, leaving 3 minutes margin. The full estimate differs from the 44 km odometer record by 0.8 km. These are authoring constraints, not additional exact event timestamps in player evidence. Later places remain unavailable until server-authorized investigation progression is implemented; the browser never receives their coordinates or names in the opening map.

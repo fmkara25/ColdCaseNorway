@@ -70,5 +70,37 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
             entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany()
                 .HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
         });
+        modelBuilder.Entity("ColdCase.Domain.Maps.MapLocation", entity =>
+        {
+            entity.Property<string>("CaseId").IsRequired().HasMaxLength(32).HasColumnType("character varying(32)");
+            entity.Property<string>("Id").IsRequired().HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<string>("Name").IsRequired().HasMaxLength(200).HasColumnType("character varying(200)");
+            entity.Property<string>("Description").IsRequired().HasColumnType("text");
+            entity.Property<int>("X").HasColumnType("integer");
+            entity.Property<int>("Y").HasColumnType("integer");
+            entity.Property<bool>("IsInitiallyVisible").HasColumnType("boolean");
+            entity.HasKey("CaseId", "Id");
+            entity.ToTable("MapLocations");
+            entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany().HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+        });
+        modelBuilder.Entity("ColdCase.Domain.Maps.MapRoad", entity =>
+        {
+            entity.Property<string>("CaseId").IsRequired().HasMaxLength(32).HasColumnType("character varying(32)");
+            entity.Property<string>("Id").IsRequired().HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<string>("FromLocationId").IsRequired().HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<string>("ToLocationId").IsRequired().HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<int>("Meters").HasColumnType("integer");
+            entity.Property<int>("WalkMinutesMin").HasColumnType("integer");
+            entity.Property<int>("WalkMinutesMax").HasColumnType("integer");
+            entity.Property<int>("DriveMinutesMin").HasColumnType("integer");
+            entity.Property<int>("DriveMinutesMax").HasColumnType("integer");
+            entity.Property<bool>("IsInitiallyVisible").HasColumnType("boolean");
+            entity.HasKey("CaseId", "Id");
+            entity.HasIndex("CaseId", "FromLocationId");
+            entity.HasIndex("CaseId", "ToLocationId");
+            entity.ToTable("MapRoads");
+            entity.HasOne("ColdCase.Domain.Maps.MapLocation", null).WithMany().HasForeignKey("CaseId", "FromLocationId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+            entity.HasOne("ColdCase.Domain.Maps.MapLocation", null).WithMany().HasForeignKey("CaseId", "ToLocationId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+        });
     }
 }
