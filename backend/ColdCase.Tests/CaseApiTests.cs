@@ -54,6 +54,23 @@ public sealed class CaseApiTests
         Assert.Equal("Kunne ikke hente saksopplysningene.", json.RootElement.GetProperty("title").GetString());
     }
 
+    [Fact]
+    public async Task PeopleAreScopedAndDoNotExposeHiddenRecordsOrVisibilityRules()
+    {
+        using var factory = new ApiFactory(false);
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/api/cases/1999-1218/people");
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("INTERNAL_SECRET", body);
+        using var json = JsonDocument.Parse(body);
+        Assert.Equal(1, json.RootElement.GetArrayLength());
+        Assert.Equal(new[] { "id", "name", "age", "role", "introduction" }.Order(),
+            json.RootElement[0].EnumerateObject().Select(x => x.Name).Order());
+        using var missing = await client.GetAsync("/api/cases/unknown/people");
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+    }
+
     private sealed class ApiFactory(bool fail) : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -81,6 +98,11 @@ public sealed class CaseApiTests
             if (fail) throw new InvalidOperationException("INTERNAL_SECRET database password and solution");
             return Task.FromResult<IReadOnlyList<CaseFile>>([File]);
         }
+        public Task<IReadOnlyList<Person>> ListPeopleAsync(string caseId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Person>>([
+                new() { CaseId = File.Id, Id = "ingrid", Name = "Ingrid Solberg", Age = 23, Role = "Savnet", Introduction = "Savnet etter kveldsvakten.", IsInitiallyVisible = true },
+                new() { CaseId = File.Id, Id = "hidden", Name = "INTERNAL_SECRET", IsInitiallyVisible = false }
+            ]);
         public Task<CaseFile?> FindAsync(string id, CancellationToken cancellationToken) =>
             Task.FromResult(id == File.Id ? File : null);
     }

@@ -27,6 +27,9 @@ public sealed class CasePersistenceTests
         Assert.NotNull(file);
         Assert.Equal("Ingrid Solberg", file.MissingPerson);
         Assert.Equal(new DateOnly(1999, 12, 18), file.DisappearanceDate);
+        var people = await repository.ListPeopleAsync("1999-1218", CancellationToken.None);
+        Assert.Equal(new[] { "erik", "ingrid", "jonas", "maria" }, people.Select(x => x.Id));
+        Assert.Empty(await repository.ListPeopleAsync("other-case", CancellationToken.None));
         Assert.Null(await repository.FindAsync("missing-case", CancellationToken.None));
     }
 }

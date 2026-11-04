@@ -24,5 +24,19 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
             entity.HasKey("Id");
             entity.ToTable("Cases");
         });
+        modelBuilder.Entity("ColdCase.Domain.Cases.Person", entity =>
+        {
+            entity.Property<string>("CaseId").HasMaxLength(32).HasColumnType("character varying(32)");
+            entity.Property<string>("Id").HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<int>("Age").HasColumnType("integer");
+            entity.Property<string>("Name").IsRequired().HasMaxLength(200).HasColumnType("character varying(200)");
+            entity.Property<string>("Role").IsRequired().HasMaxLength(200).HasColumnType("character varying(200)");
+            entity.Property<string>("Introduction").IsRequired().HasColumnType("text");
+            entity.Property<bool>("IsInitiallyVisible").HasColumnType("boolean");
+            entity.HasKey("CaseId", "Id");
+            entity.ToTable("People");
+            entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany()
+                .HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+        });
     }
 }

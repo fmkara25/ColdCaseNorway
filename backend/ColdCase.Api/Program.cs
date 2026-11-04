@@ -42,6 +42,14 @@ app.MapGet("/api/cases/{id}", async (string id, ICaseRepository cases, Cancellat
         ? (IResult)Results.Problem(statusCode: 404, title: "Saken finnes ikke.")
         : Results.Ok(CaseOverviewResponse.From(file));
 });
+app.MapGet("/api/cases/{id}/people", async (string id, ICaseRepository cases, CancellationToken cancellationToken) =>
+{
+    if (await cases.FindAsync(id, cancellationToken) is null)
+        return (IResult)Results.Problem(statusCode: 404, title: "Saken finnes ikke.");
+    var people = await cases.ListPeopleAsync(id, cancellationToken);
+    return Results.Ok(people.Where(x => x.IsInitiallyVisible).Select(x => new
+        { x.Id, x.Name, x.Age, x.Role, x.Introduction }));
+});
 app.Run();
 
 public partial class Program { }

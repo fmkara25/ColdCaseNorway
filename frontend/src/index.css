@@ -314,3 +314,19 @@ aside>.eyebrow,aside nav {
 .overview-heading {
   margin-top:30px}
 }
+
+nav>a { padding:14px 12px; font-size:11px; letter-spacing:1.5px; }
+.people-workspace { display:grid; grid-template-columns:minmax(260px, 1fr) minmax(280px, 1.2fr); gap:24px; }
+.people-list { display:flex; flex-direction:column; gap:12px; }
+.person-card { display:flex; align-items:center; gap:18px; border:1px solid #303944; padding:16px; background:#19212a; }
+.person-card[aria-current=page] { border-color:#b69a6a; }
+.person-card .monogram { width:42px; height:52px; margin:0; font-size:19px; flex-shrink:0; }
+.person-card strong { display:block; font-size:14px; font-weight:500; }
+.person-card small { display:block; font-size:11px; color:#9da8b4; margin-top:7px; line-height:1.6; }
+.person-card>span:last-child { margin-left:auto; }
+.person-detail { padding:32px; border:1px solid #303944; background:#19212a; }
+.person-detail h2 { font-family:Georgia,serif; font-size:28px; }
+.person-detail p { font-size:13px; }
+.person-detail hr { border:0; border-top:1px solid #303944; margin:24px 0; }
+@media(max-width:1000px) { .people-workspace { grid-template-columns:1fr; } }
+@media(max-width:700px) { aside nav { display:flex; flex-direction:row; flex-wrap:wrap; margin-top:14px; } nav .nav-unavailable { display:none; } }
