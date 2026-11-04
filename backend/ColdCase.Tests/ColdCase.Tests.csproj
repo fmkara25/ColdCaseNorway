@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ColdCase.Application\ColdCase.Application.csproj" />
     <ProjectReference Include="..\ColdCase.Domain\ColdCase.Domain.csproj" />
+    <ProjectReference Include="..\ColdCase.Infrastructure\ColdCase.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

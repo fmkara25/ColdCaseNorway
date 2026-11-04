@@ -1,17 +1,316 @@
 @import "tailwindcss";
 
+:root {
+  font-family:Inter,"Segoe UI",sans-serif;
+  color:#dce1e5;
+  background:#11171e;
+  font-synthesis:none;
+  font-weight:400}
 * {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  min-width: 320px;
-  min-height: 100vh;
-  margin: 0;
-}
-
+  box-sizing:border-box}
 body {
-  min-height: 100vh;
+  margin:0}
+html,body,#root {
+  min-width:320px;
+  min-height:100vh}
+a {
+  color:inherit;
+  text-decoration:none}
+button,a {
+  touch-action:manipulation}
+a:focus-visible,button:focus-visible {
+  outline:2px solid #d1ad72;
+  outline-offset:5px}
+button,.primary-button {
+  cursor:pointer;
+  border:1px solid #b69a6a;
+  background:#c8ac7c;
+  color:#151a20;
+  padding:13px 20px;
+  font:inherit;
+  font-size:14px}
+h1,h2,p {
+  margin-top:0}
+h1 {
+  font-family:Georgia,serif;
+  font-weight:400;
+  font-size:clamp(32px,4vw,52px);
+  line-height:1.15;
+  letter-spacing:-1px}
+h2 {
+  font-weight:450}
+p {
+  line-height:1.85;
+  color:#a6afb9}
+.eyebrow {
+  font-size:10px;
+  letter-spacing:2.1px;
+  color:#b69e77;
+  font-weight:600}
+.archive {
+  max-width:1280px;
+  margin:auto;
+  padding:0 64px}
+.masthead {
+  height:100px;
+  border-bottom:1px solid #2a323b;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:13px;
+  letter-spacing:3px}
+.masthead a {
+  font-weight:650}
+.masthead a span,.brand span {
+  color:#a8b0ba}
+.masthead>span {
+  font-size:9px;
+  letter-spacing:2px;
+  color:#82909d}
+.archive-heading {
+  max-width:650px;
+  margin:76px 0 46px}
+.archive-heading>p:last-child {
+  font-size:14px}
+.case-card {
+  display:grid;
+  grid-template-columns:240px 1fr;
+  border:1px solid #323a43;
+  background:#171e26;
+  max-width:1000px}
+.archive-label {
+  background:linear-gradient(145deg,#29313a,#1b222a);
+  padding:30px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  border-right:1px solid #39414a;
+  min-height:350px;
+  color:#88919b;
+  font-size:10px;
+  letter-spacing:3px}
+.archive-label strong {
+  font-family:Georgia,serif;
+  color:#b5bec5;
+  font-size:27px;
+  font-weight:400;
+  letter-spacing:1px}
+.case-content {
+  padding:30px 36px}
+.case-meta {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:10px;
+  letter-spacing:1.5px;
+  color:#929ca8}
+.status {
+  color:#c8af85;
+  border:1px solid #544b3d;
+  padding:5px 9px;
+  font-size:10px;
+  letter-spacing:1px}
+.case-content h2 {
+  font-family:Georgia,serif;
+  font-size:30px;
+  margin:24px 0 13px}
+.case-content>p {
+  font-size:13px;
+  max-width:520px}
+dl {
+  display:flex;
+  gap:32px;
+  margin:24px 0 30px}
+dt {
+  font-size:10px;
+  color:#85919d;
+  margin-bottom:6px}
+dd {
+  font-size:12px;
+  margin:0}
+.primary-button {
+  display:inline-flex;
+  gap:50px;
+  align-items:center}
+footer {
+  padding:38px 0;
+  color:#77828f;
+  font-size:11px}
+.workstation {
+  display:grid;
+  grid-template-columns:216px 1fr;
+  min-height:100vh}
+aside {
+  background:#0e141b;
+  border-right:1px solid #2b333d;
+  display:flex;
+  flex-direction:column;
+  padding:35px 24px}
+.brand {
+  font-size:16px;
+  letter-spacing:4px;
+  line-height:1.7;
+  margin-bottom:65px}
+aside .eyebrow {
+  font-size:9px;
+  margin-left:10px}
+nav {
+  display:flex;
+  flex-direction:column;
+  gap:8px}
+nav>span {
+  padding:14px 12px;
+  font-size:11px;
+  letter-spacing:1.5px}
+.nav-active {
+  color:#d1b482;
+  background:#242829;
+  border-left:2px solid #bda070}
+.nav-unavailable {
+  color:#818b97}
+nav small {
+  display:block;
+  font-size:9px;
+  letter-spacing:0;
+  color:#65717e;
+  margin-top:6px}
+.back-link {
+  font-size:12px;
+  color:#a4adb8;
+  margin-top:auto;
+  padding-top:40px}
+.workspace {
+  padding:0 48px 48px;
+  min-width:0}
+.workspace-header {
+  height:78px;
+  border-bottom:1px solid #2b333d;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  color:#85919d;
+  font-size:10px;
+  letter-spacing:1.5px}
+.overview-heading {
+  margin:48px 0 36px}
+.overview-heading h1 {
+  font-size:42px;
+  margin-bottom:16px}
+.overview-heading>p:last-child {
+  font-size:12px}
+.overview-grid {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 260px;
+  gap:24px}
+.report {
+  background:#dfdcd3;
+  color:#292e32;
+  padding:36px;
+  min-height:420px;
+  box-shadow:0 7px 20px #0002}
+.report-meta {
+  display:flex;
+  justify-content:space-between;
+  font-family:monospace;
+  font-size:10px;
+  letter-spacing:1px;
+  color:#656868;
+  border-bottom:1px solid #b9b8b0;
+  padding-bottom:18px;
+  margin-bottom:34px}
+.report h2 {
+  font-family:Georgia,serif;
+  font-size:26px}
+.report p {
+  color:#3f474c;
+  font-size:14px;
+  line-height:2}
+.report hr {
+  border:0;
+  border-top:1px solid #b9b8b0;
+  margin:28px 0}
+.report .report-note {
+  color:#686e70;
+  font-size:12px}
+.person-summary {
+  padding:25px;
+  background:#19212a;
+  border:1px solid #303944}
+.monogram {
+  width:68px;
+  height:80px;
+  background:#29333e;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:25px 0;
+  color:#9ca7b0;
+  font-family:Georgia,serif;
+  font-size:28px}
+.person-summary h2 {
+  font-size:19px;
+  margin-bottom:8px}
+.person-summary p {
+  font-size:12px}
+.person-summary .eyebrow {
+  font-size:9px}
+.person-summary hr {
+  border:0;
+  border-top:1px solid #303944;
+  margin:28px 0}
+.feedback {
+  padding:60px 0;
+  max-width:650px}
+.feedback h2 {
+  font-size:20px}
+.feedback p {
+  font-size:13px}
+@media(max-width:1100px) {
+  .overview-grid {
+  grid-template-columns:1fr}
+.person-summary {
+  max-width:none}
+.workspace {
+  padding:0 28px 28px}
+dl {
+  gap:18px;
+  flex-wrap:wrap}
+}
+@media(max-width:700px) {
+  .archive {
+  padding:0 22px}
+.masthead>span {
+  display:none}
+.archive-heading {
+  margin-top:46px}
+.case-card {
+  grid-template-columns:1fr}
+.archive-label {
+  min-height:100px;
+  border-right:0;
+  border-bottom:1px solid #39414a;
+  gap:15px}
+.case-content {
+  padding:24px}
+.workstation {
+  grid-template-columns:1fr}
+aside {
+  padding:18px 22px;
+  border-right:0;
+  border-bottom:1px solid #2b333d}
+.brand {
+  margin:0;
+  font-size:12px}
+aside>.eyebrow,aside nav {
+  display:none}
+.back-link {
+  padding-top:12px}
+.workspace {
+  padding:0 22px 30px}
+.overview-heading h1 {
+  font-size:34px}
+.report {
+  padding:24px}
+.overview-heading {
+  margin-top:30px}
 }
