@@ -17,6 +17,10 @@ public sealed class CaseRepository(CaseDbContext database) : ICaseRepository
         await database.Evidence.AsNoTracking().Where(x => x.CaseId == caseId && x.IsInitiallyVisible)
             .OrderBy(x => x.DisplayOrder).ThenBy(x => x.Id).ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<TimelineEvent>> ListTimelineAsync(string caseId, CancellationToken cancellationToken) =>
+        await database.TimelineEvents.AsNoTracking().Where(x => x.CaseId == caseId && x.IsInitiallyVisible)
+            .OrderBy(x => x.DisplayOrder).ThenBy(x => x.Id).ToListAsync(cancellationToken);
+
     public Task<CaseFile?> FindAsync(string id, CancellationToken cancellationToken) =>
         database.Cases.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
 }

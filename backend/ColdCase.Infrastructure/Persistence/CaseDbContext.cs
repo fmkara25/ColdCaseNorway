@@ -11,8 +11,17 @@ public sealed class CaseDbContext(DbContextOptions<CaseDbContext> options) : DbC
 
     public DbSet<Evidence> Evidence => Set<Evidence>();
 
+    public DbSet<TimelineEvent> TimelineEvents => Set<TimelineEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var timeline = modelBuilder.Entity<TimelineEvent>();
+        timeline.HasKey(x => new { x.CaseId, x.Id });
+        timeline.Property(x => x.CaseId).HasMaxLength(32);
+        timeline.Property(x => x.Id).HasMaxLength(64);
+        timeline.Property(x => x.Title).HasMaxLength(200).IsRequired();
+        timeline.Property(x => x.SourceEvidenceId).HasMaxLength(64);
+        timeline.HasOne<CaseFile>().WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
         var evidence = modelBuilder.Entity<Evidence>();
         evidence.HasKey(x => new { x.CaseId, x.Id });
         evidence.Property(x => x.CaseId).HasMaxLength(32);

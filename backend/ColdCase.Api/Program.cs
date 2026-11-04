@@ -58,6 +58,14 @@ app.MapGet("/api/cases/{id}/evidence", async (string id, ICaseRepository cases, 
     return Results.Ok(evidence.Where(x => x.IsInitiallyVisible).Select(x => new
         { x.Id, x.Title, x.Kind, x.Source, x.Body }));
 });
+app.MapGet("/api/cases/{id}/timeline", async (string id, ICaseRepository cases, CancellationToken cancellationToken) =>
+{
+    if (await cases.FindAsync(id, cancellationToken) is null)
+        return (IResult)Results.Problem(statusCode: 404, title: "Saken finnes ikke.");
+    var events = await cases.ListTimelineAsync(id, cancellationToken);
+    return Results.Ok(events.Where(x => x.IsInitiallyVisible).Select(x => new
+        { x.Id, x.Title, x.Description, x.SourceEvidenceId, x.MinuteOfDay, x.IsEstimate, x.IsPlanned }));
+});
 app.Run();
 
 public partial class Program { }

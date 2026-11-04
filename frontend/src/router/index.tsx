@@ -2,6 +2,7 @@ import { createBrowserRouter, Link } from "react-router-dom";
 import { CaseLayout } from "../features/cases/CaseLayout";
 import { PeoplePage } from "../features/people/PeoplePage";
 import { EvidencePage } from "../features/evidence/EvidencePage";
+import { TimelinePage } from "../features/timeline/TimelinePage";
 import App from "../App";
 import { CaseOverview } from "../features/cases/CasePages";
 
@@ -9,6 +10,7 @@ export const router = createBrowserRouter([
   { path: "/", element: <App /> },
   { path: "/cases/:caseId", element: <CaseLayout />, children: [
     { index: true, element: <CaseOverview /> },
+    { path: "timeline", element: <TimelinePage /> },
     { path: "evidence", element: <EvidencePage /> },
     { path: "evidence/:evidenceId", element: <EvidencePage /> },
     { path: "people", element: <PeoplePage /> },

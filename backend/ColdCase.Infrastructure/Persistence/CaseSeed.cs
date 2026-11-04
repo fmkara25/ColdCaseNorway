@@ -39,5 +39,6 @@ public static class CaseSeed
         }
         await database.SaveChangesAsync();
         await OpeningEvidenceSeed.InitializeAsync(database);
+        await OpeningTimelineSeed.InitializeAsync(database);
     }
 }
