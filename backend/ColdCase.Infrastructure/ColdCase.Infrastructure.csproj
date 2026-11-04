@@ -13,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.14" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <!-- Patch transitive design-tool crypto dependencies; keep them private to this project. -->
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.14" PrivateAssets="all" />
