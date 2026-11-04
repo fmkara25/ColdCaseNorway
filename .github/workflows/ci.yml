@@ -53,3 +53,41 @@ jobs:
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
       - run: npm run test:e2e --prefix frontend
+  containers:
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE_PROJECT_NAME: coldcase-ci
+      # Synthetic CI-only credential; punctuation verifies password is not parsed as connection syntax.
+      POSTGRES_PASSWORD: "ci-only;quote'test"
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f compose.yaml -f compose.play.yaml config --quiet
+      - run: docker compose -f compose.yaml -f compose.play.yaml up -d --build --wait --wait-timeout 180
+      - name: Verify non-root app images
+        run: |
+          for service in api web; do
+            uid=$(docker compose -f compose.yaml -f compose.play.yaml exec -T "$service" id -u)
+            test "$uid" -ne 0
+          done
+      - run: python3 scripts/container-smoke.py write "$RUNNER_TEMP/coldcase.cookies"
+      - name: Recreate stack without removing its database volume
+        run: |
+          docker compose -f compose.yaml -f compose.play.yaml down
+          docker compose -f compose.yaml -f compose.play.yaml up -d --wait --wait-timeout 180
+      - run: python3 scripts/container-smoke.py read "$RUNNER_TEMP/coldcase.cookies"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --prefix frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npx playwright test --config playwright.container.config.ts
+        working-directory: frontend
+      - name: Container diagnostics
+        if: failure()
+        run: docker compose -f compose.yaml -f compose.play.yaml logs --no-color --tail 150
+      - name: Stop isolated CI stack
+        if: always()
+        run: docker compose -f compose.yaml -f compose.play.yaml down

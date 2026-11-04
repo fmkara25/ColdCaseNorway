@@ -58,3 +58,6 @@ Thumbs.db
 # Docker / Local data
 # =========================
 docker-data/
+# Python tooling
+__pycache__/
+*.pyc

@@ -6,6 +6,8 @@ Archive → open case → overview → people register and details → opening e
 
 The complete Case 01 core loop is implemented, with anonymous save ownership, final reconstruction, initial illustrations and optional sound. Human 45–60 minute pacing/acceptance, account-based recovery, deployment hardening and Azure deployment remain pending. Never include secret solution data in public case responses.
 
+For a built frontend/API/database stack without host Node/.NET, see [local Docker playtest](LOCAL_PLAYTEST.md). The commands below remain the hot-reload development workflow.
+
 ## Local startup (PowerShell, repository root)
 
 Prerequisites: Node 22.12+, .NET SDK 10, Docker Desktop.
@@ -132,3 +134,7 @@ A shared router frame provides **Hopp til innhold** before the archive/workstati
 A root route error boundary replaces React Router's default developer-oriented failure screen with generic Bokmål recovery controls. It never renders the caught exception, stack or case payload. The error heading labels the focused main landmark. Reload/home recovery does not clear server saves, cookies or local draft storage; volatile unsaved changes may be lost and the screen states this explicitly. Existing API error/retry components and missing-page feedback remain separate. This is UI error containment, not save recovery or a replacement for API authorization.
 
 Browser acceptance checks exercise keyboard skip/navigation focus, active navigation, focus retention during note editing, forced render failure with a private marker, and successful reload recovery. Existing dirty-board navigation and full gameplay scenarios remain regression checks. These checks do not constitute a complete WCAG audit or screen-reader/device certification.
+
+## Built-container validation
+
+CI also builds both application Dockerfiles, checks non-root runtime users, starts the local Compose stack against an isolated database volume, verifies SPA/API/static-asset routing and saves a synthetic note. It then recreates the stack without deleting that volume and verifies the same cookie can recover the note. All browser scenarios run again against the built frontend and reverse proxy using `playwright.container.config.ts`. Local playtest containers explicitly use Development mode for migrations, seed and HTTP guest cookies; this configuration is not an internet deployment.

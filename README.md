@@ -55,6 +55,10 @@ The backend follows a pragmatic Clean Architecture approach within a modular mon
 
 The frontend uses a feature-based architecture.
 
+## Try locally
+
+Run the complete game with Docker Desktop; Node/.NET do not need to be installed on the host. See [local playtest setup](docs/LOCAL_PLAYTEST.md) for safe update, password and startup instructions. This serves the game only on your own computer, not on a public website.
+
 ## Status
 
 The Case 01 core loop includes archive/overview, people, evidence, timeline, route analysis, a saved board/notes, gated research/interviews and final reconstruction. Automated API/PostgreSQL/browser checks cover the case-to-epilogue flow. See [development setup and validation](docs/DEVELOPMENT.md). Bundled fictional archive illustrations and optional procedural ambient/paper sound are included; see [asset provenance](docs/ASSETS.md). Human playtime, listening/visual acceptance, deployment hardening and Azure deployment are still pending.

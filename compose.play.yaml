@@ -1,0 +1,39 @@
+# Local playtest only. Combine with compose.yaml; retains the existing PostgreSQL volume.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      # Development explicitly enables local migrations/seed and HTTP guest cookies.
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__ColdCase: Host=database;Database=coldcase;Username=coldcase
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    depends_on:
+      database:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "127.0.0.1:${COLDCASE_PORT:-8080}:8080"
+    depends_on:
+      api:
+        condition: service_started
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      # Query through the actual browser origin, proxy, API and seeded database.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/api/cases"]
+      interval: 5s
+      timeout: 5s
+      start_period: 20s
+      retries: 20
