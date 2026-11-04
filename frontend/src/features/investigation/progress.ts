@@ -4,10 +4,10 @@ import { openInvestigation } from "../board/api";
 
 export interface CaseAction { id: string; kind: string; personId: string | null; label: string; requiresRoute: boolean }
 export interface ActionHistory { id: string; personId: string | null; label: string; response: string }
-export interface Progress { version: number; reviewedEvidenceIds: string[]; actions: CaseAction[]; history: ActionHistory[] }
+export interface Progress { version: number; isReconstructed: boolean; reviewedEvidenceIds: string[]; actions: CaseAction[]; history: ActionHistory[] }
 function record(v: unknown): v is Record<string, unknown> { return typeof v === "object" && v !== null; }
 export function isProgress(v: unknown): v is Progress {
-  return record(v) && Number.isInteger(v.version) && (v.version as number) >= 0 && Array.isArray(v.reviewedEvidenceIds) && v.reviewedEvidenceIds.every(id => typeof id === "string") &&
+  return record(v) && Number.isInteger(v.version) && (v.version as number) >= 0 && typeof v.isReconstructed === "boolean" && Array.isArray(v.reviewedEvidenceIds) && v.reviewedEvidenceIds.every(id => typeof id === "string") &&
     Array.isArray(v.actions) && v.actions.every(a => record(a) && ["id", "kind", "label"].every(k => typeof a[k] === "string") && (a.personId === null || typeof a.personId === "string") && typeof a.requiresRoute === "boolean") &&
     Array.isArray(v.history) && v.history.every(a => record(a) && ["id", "label", "response"].every(k => typeof a[k] === "string") && (a.personId === null || typeof a.personId === "string"));
 }
@@ -20,8 +20,8 @@ export async function readProgress(caseId: string): Promise<Progress> {
     return fetchJson<Progress>(path, undefined, isProgress);
   }
 }
-export function useProgress(caseId: string) {
-  return useQuery({ queryKey: ["progress", caseId], queryFn: () => readProgress(caseId), staleTime: 0, refetchOnWindowFocus: false });
+export function useProgress(caseId: string, enabled = true) {
+  return useQuery({ queryKey: ["progress", caseId], enabled, queryFn: () => readProgress(caseId), staleTime: 0, refetchOnWindowFocus: false });
 }
 export async function progressCommand(caseId: string, path: string, locationIds?: string[]): Promise<Progress> {
   const response = await fetch(`/api/cases/${encodeURIComponent(caseId)}/investigation/${path}`, {

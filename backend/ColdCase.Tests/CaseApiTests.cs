@@ -174,6 +174,9 @@ public sealed class CaseApiTests
         var body = await progress.Content.ReadAsStringAsync();
         Assert.DoesNotContain("lars", body, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("requiredFlags", body); Assert.DoesNotContain("grants", body);
+        using var final = await client.GetAsync(endpoint + "/reconstruction");
+        Assert.Equal(HttpStatusCode.NotFound, final.StatusCode);
+        Assert.DoesNotContain("epilogue", await final.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
         using var locked = await client.PostAsJsonAsync(endpoint + "/actions/lars-events", new { locationIds = (string[]?)null });
         Assert.Equal(HttpStatusCode.NotFound, locked.StatusCode);
         using var hidden = await client.PostAsync(endpoint + "/evidence/lars-account/review", null);
@@ -197,6 +200,12 @@ public sealed class CaseApiTests
             Task.FromResult(rows.Values.SingleOrDefault(x => x.CaseId == caseId && x.AccessHash == accessHash));
         public Task CreateAsync(Investigation investigation, CancellationToken cancellationToken)
         { rows.Add(investigation.Id, investigation); return Task.CompletedTask; }
+        public Task<bool> SaveReconstructionAsync(Guid id, string caseId, string accessHash, int expectedVersion, string progressJson, string reconstructionJson, CancellationToken cancellationToken)
+        {
+            if (!rows.TryGetValue(id, out var row) || row.CaseId != caseId || row.AccessHash != accessHash || row.Version != expectedVersion) return Task.FromResult(false);
+            row.ProgressJson = progressJson; row.ReconstructionJson = reconstructionJson; row.Version++;
+            return Task.FromResult(true);
+        }
         public Task<bool> SaveProgressAsync(Guid id, string caseId, string accessHash, int expectedVersion, string progressJson, CancellationToken cancellationToken)
         {
             if (!rows.TryGetValue(id, out var row) || row.CaseId != caseId || row.AccessHash != accessHash || row.Version != expectedVersion) return Task.FromResult(false);

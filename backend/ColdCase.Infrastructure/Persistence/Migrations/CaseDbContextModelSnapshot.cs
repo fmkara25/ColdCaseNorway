@@ -108,6 +108,7 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
             entity.Property<string>("CaseId").IsRequired().HasMaxLength(32).HasColumnType("character varying(32)");
             entity.Property<string>("AccessHash").IsRequired().HasMaxLength(64).HasColumnType("character varying(64)");
             entity.Property<int>("Version").HasColumnType("integer");
+            entity.Property<string>("ReconstructionJson").HasColumnType("jsonb");
             entity.Property<string>("ProgressJson").IsRequired().HasColumnType("jsonb").HasDefaultValue("[]");
             entity.Property<string>("BoardJson").IsRequired().HasColumnType("jsonb");
             entity.Property<DateTimeOffset>("CreatedAt").HasColumnType("timestamp with time zone");
@@ -130,6 +131,15 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
             entity.HasKey("CaseId", "Id");
             entity.ToTable("CaseActions");
             entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany().HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+        });
+        modelBuilder.Entity("ColdCase.Domain.Investigations.CaseSolution", entity =>
+        {
+            entity.Property<string>("CaseId").HasMaxLength(32).HasColumnType("character varying(32)");
+            entity.Property<string>("DefinitionJson").IsRequired().HasColumnType("jsonb");
+            entity.Property<string>("Epilogue").IsRequired().HasColumnType("text");
+            entity.HasKey("CaseId");
+            entity.ToTable("CaseSolutions");
+            entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithOne().HasForeignKey("ColdCase.Domain.Investigations.CaseSolution", "CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
         });
     }
 }

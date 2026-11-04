@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { isProgress, progressCommand, readProgress } from "./progress";
-const progress = { version: 1, reviewedEvidenceIds: ["bus-ticket"], actions: [], history: [] };
+const progress = { version: 1, isReconstructed: false, reviewedEvidenceIds: ["bus-ticket"], actions: [], history: [] };
 afterEach(() => vi.unstubAllGlobals());
 it("validates progress without needing hidden rules or answers", () => {
   expect(isProgress(progress)).toBe(true);

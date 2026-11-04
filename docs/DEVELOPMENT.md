@@ -2,7 +2,7 @@
 
 ## Current slice
 
-Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline → interactive schematic map/route estimator → server-saved board and notes → gated research and interviews. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
+Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline → interactive schematic map/route estimator → server-saved board and notes → gated research and interviews → final reconstruction and epilogue. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
 
 This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
 
@@ -114,4 +114,13 @@ CaseActions stores authored responses and JSONB prerequisites/grants in PostgreS
 
 The progress API exposes only currently available action labels and already completed response history, never all rules, prerequisites, grants or future answers. Read markers are now server-backed; old local reading marks are intentionally not imported as trusted progress. Board drafts can conflict after another tab advances progress; they remain protected by the existing 409 workflow.
 
-Story rhythm: independent Maria/Jonas branches, witness/route review, discovery of company records, mileage and terminal cross-references, staged Lars questions, verification of his extra-job claim and his unsolicited detail. Early accusation is a denial, not game over. The late account is presented as a statement to assess against the evidence, not medical proof or an automatic final reconstruction. Exact accident/death timestamps remain unknown. Final reconstruction is still pending.
+Story rhythm: independent Maria/Jonas branches, witness/route review, discovery of company records, mileage and terminal cross-references, staged Lars questions, verification of his extra-job claim and his unsolicited detail. Early accusation is a denial, not game over. The late account is presented as a statement to assess against the evidence, not medical proof or an automatic final reconstruction. Exact accident/death timestamps remain unknown. Final reconstruction now independently evaluates the theory, support and route.
+
+
+## Final reconstruction
+
+CaseSolutions holds the questions, private answer/evidence/route rubric and epilogue in PostgreSQL. Only question labels/choices and accessible source/place labels are exposed after the late-stage gate; answer keys, private source groups and waypoint rubric are never serialized to the client. Equivalent sources are accepted within evidence categories so the player need not guess a single exact combination. The player must select a bounded set of reviewed sources, resolve the main branches and propose a connected complete route whose mileage, order and critical driving/stopping interval fit the authored model. The eight-minute stop allowance is openly disclosed as an estimate rather than a hidden puzzle number.
+
+Incorrect submissions return recoverable feedback without changing progress. An accepted theory and completion flag are saved atomically with optimistic concurrency; the board is preserved. The epilogue is private to that investigation and survives reload. Client route/theory drafts persist only as working hypotheses and grant no server access. It is a reconstruction of the fictional events, not a finding of medical or legal certainty.
+
+The end-to-end acceptance scenario covers opening material, both branches, saved links, route checks, staged statements, wrong-theory recovery, final form/route/source selection, epilogue persistence and another browser's inability to read the ending. This automated scenario does not validate 45–60 minutes of human playtime. Human playtesting, archive imagery/audio, visual polish, deployment hardening and Azure approval remain pending.

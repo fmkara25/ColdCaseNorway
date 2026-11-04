@@ -17,7 +17,7 @@ public static class GameplayEndpoints
         var lookup = actions.ToDictionary(x => "action:" + x.Id);
         return Results.Ok(new
         {
-            row.Version,
+            row.Version, isReconstructed = set.Contains("stage:closed"),
             reviewedEvidenceIds = flags.Where(x => x.StartsWith("review:")).Select(x => x[7..]),
             actions = actions.Where(x => CaseRules.Available(x, set, board)).Select(x => new
                 { x.Id, x.Kind, x.PersonId, x.Label, requiresRoute = CaseRules.Rule(x).Route is not null }),
