@@ -204,3 +204,11 @@ The final assessment now has four fixed-viewport stages: authored question/choic
 The locked state exposes no choices. The epilogue is unchanged authored content in its own scrolling reading pane. Rejected or interrupted submissions remain editable. No runtime AI, story edits, new private answer hints or database migration are introduced.
 
 The real full-case browser acceptance now selects every authored assessment through the cards, pages the real supporting sources, checks the route and submits through the final review. Separate synthetic public DTO scenarios test viewport bounds, choice/source persistence, incomplete sources, recoverable rejection/network failure and locked views; these UI fixtures do not stand in for server solution validation. Screenshots are retained for review. Human pacing/45–60 minute duration and wider playtesting remain pending.
+
+## Opening experience — optional guidance and visible followups
+
+The existing mission dialog now explains reviewing, comparison, timeline/map and saved board hypotheses in three short cards. It is optional and has no trusted progress or tutorial completion flag. The desk prompt reflects actual reviewed material/history instead of a percentage. Document inspection links directly to comparing that same authorized source.
+
+Review/action receipts list newly available followups by comparing the previous authorized action set with the returned progress snapshot. Interview followups link to the person; they never execute a question or default an approach. When no research task is available, the desk can promote currently available interview questions. Research keeps its existing priority and route-dependent tasks retain the route-aware action panel. Hidden actions/prerequisites remain server-side. There are no authored story changes, new grants or schema changes.
+
+Acceptance exercises the optional guide at three viewport sizes without altering progress, exact source-to-comparison navigation, a real review-to-research-to-new-document flow, persisted desk context and a gated interview shortcut that leaves the approach unchosen. These changes support opening clarity; they do not establish human playtime or guarantee a ten-minute pace.
