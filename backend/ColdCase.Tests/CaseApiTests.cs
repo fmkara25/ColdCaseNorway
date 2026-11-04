@@ -193,11 +193,62 @@ public sealed class CaseApiTests
         Assert.Equal(HttpStatusCode.Unauthorized, privateProgress.StatusCode);
     }
 
+
+    [Fact]
+    public async Task InterviewChoiceIsAuthorizedPrivateImmutableAndVersionChecked()
+    {
+        using var factory = new ApiFactory(false);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        client.DefaultRequestHeaders.Add("X-ColdCase-Request", "1");
+        const string endpoint = "/api/cases/1999-1218/investigation";
+        (await client.PostAsync(endpoint, null)).EnsureSuccessStatusCode();
+        using var locked = await client.PostAsJsonAsync(endpoint + "/actions/maria-plan", new { approachId = "document", expectedVersion = 0 });
+        Assert.Equal(HttpStatusCode.NotFound, locked.StatusCode);
+        var repository = (StubInvestigationRepository)factory.Services.GetRequiredService<IInvestigationRepository>();
+        var row = repository.Single;
+        row.ProgressJson = JsonSerializer.Serialize(new[] { "review:ingrid-note", "review:maria-statement" });
+        row.BoardJson = JsonSerializer.Serialize(new BoardState(1, [], [], [new("c", "person:maria", "evidence:ingrid-note", "")]), CaseRules.Json);
+        var before = await client.GetStringAsync(endpoint + "/progress");
+        using var beforeJson = JsonDocument.Parse(before);
+        Assert.Contains(beforeJson.RootElement.GetProperty("actions").EnumerateArray().Single(x => x.GetProperty("id").GetString() == "maria-plan").GetProperty("approaches").EnumerateArray(),
+            option => option.GetProperty("id").GetString() == "document");
+        Assert.DoesNotContain("opening", before, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("requiredFlags", before);
+        Assert.DoesNotContain("maria-document-followup", before);
+        using var stale = await client.PostAsJsonAsync(endpoint + "/actions/maria-plan", new { approachId = "document", expectedVersion = 99 });
+        Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
+        using var forged = await client.PostAsJsonAsync(endpoint + "/actions/maria-plan", new { approachId = "forged", expectedVersion = 0 });
+        Assert.Equal(HttpStatusCode.BadRequest, forged.StatusCode);
+        Assert.DoesNotContain("choice:", row.ProgressJson);
+        using var completed = await client.PostAsJsonAsync(endpoint + "/actions/maria-plan", new { approachId = "document", expectedVersion = 0 });
+        completed.EnsureSuccessStatusCode();
+        var saved = await completed.Content.ReadAsStringAsync();
+        using var savedJson = JsonDocument.Parse(saved);
+        Assert.Contains("Jeg skjønner", savedJson.RootElement.GetProperty("history")[0].GetProperty("response").GetString());
+        Assert.Contains("choice:maria-plan:document", row.ProgressJson);
+        Assert.Equal(1, row.Version);
+        Assert.Contains("person:maria", row.BoardJson);
+        using var repeated = await client.PostAsJsonAsync(endpoint + "/actions/maria-plan", new { approachId = "document", expectedVersion = 0 });
+        repeated.EnsureSuccessStatusCode(); Assert.Equal(1, row.Version);
+        using var changed = await client.PostAsJsonAsync(endpoint + "/actions/maria-plan", new { approachId = "open", expectedVersion = 1 });
+        Assert.Equal(HttpStatusCode.Conflict, changed.StatusCode);
+        using var restored = JsonDocument.Parse(await client.GetStringAsync(endpoint + "/progress"));
+        Assert.Equal("document", restored.RootElement.GetProperty("history")[0].GetProperty("approach").GetProperty("id").GetString());
+        using var other = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        Assert.Equal(HttpStatusCode.Unauthorized, (await other.GetAsync(endpoint + "/progress")).StatusCode);
+    }
+
     private sealed class StubInvestigationRepository : IInvestigationRepository
     {
         private readonly Dictionary<Guid, Investigation> rows = [];
-        public Task<Investigation?> ReadAsync(string caseId, string accessHash, CancellationToken cancellationToken) =>
-            Task.FromResult(rows.Values.SingleOrDefault(x => x.CaseId == caseId && x.AccessHash == accessHash));
+        public Investigation Single => rows.Values.Single();
+        public Task<Investigation?> ReadAsync(string caseId, string accessHash, CancellationToken cancellationToken)
+        {
+            var row = rows.Values.SingleOrDefault(x => x.CaseId == caseId && x.AccessHash == accessHash);
+            return Task.FromResult(row is null ? null : new Investigation { Id = row.Id, CaseId = row.CaseId,
+                AccessHash = row.AccessHash, CreatedAt = row.CreatedAt, Version = row.Version,
+                BoardJson = row.BoardJson, ProgressJson = row.ProgressJson, ReconstructionJson = row.ReconstructionJson });
+        }
         public Task CreateAsync(Investigation investigation, CancellationToken cancellationToken)
         { rows.Add(investigation.Id, investigation); return Task.CompletedTask; }
         public Task<bool> SaveReconstructionAsync(Guid id, string caseId, string accessHash, int expectedVersion, string progressJson, string reconstructionJson, CancellationToken cancellationToken)

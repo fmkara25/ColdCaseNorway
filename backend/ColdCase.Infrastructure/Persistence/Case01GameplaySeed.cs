@@ -12,10 +12,10 @@ public static class Case01GameplaySeed
     {
         var order = 0;
         CaseAction A(string id, string kind, string? person, string label, string response, string[] requires,
-            string[] grants, RequiredLink[]? links = null, string[]? route = null, int? minutes = null) => new()
+            string[] grants, RequiredLink[]? links = null, string[]? route = null, int? minutes = null, InterviewApproach[]? approaches = null) => new()
         {
             CaseId = "1999-1218", Id = id, Kind = kind, PersonId = person, Label = label, Response = response,
-            DisplayOrder = ++order, RuleJson = JsonSerializer.Serialize(new ActionRule(requires, grants, links ?? [], route, minutes), CaseRules.Json)
+            DisplayOrder = ++order, RuleJson = JsonSerializer.Serialize(new ActionRule(requires, grants, links ?? [], route, minutes, approaches), CaseRules.Json)
         };
         return [
             A("find-note", "research", null, "Se gjennom Ingrids etterlatte notater",
@@ -26,7 +26,15 @@ public static class Case01GameplaySeed
                 ["review:phone-log", "review:jonas-statement"], ["evidence:phone-match"]),
             A("maria-plan", "interview", "maria", "Spør om notatet og den avtalte bagen",
                 "Jeg visste at hun ville til Trondheim. Hun hadde pakket en bag som sto hos meg. Jeg sa ikke hele sannheten fordi jeg trodde jeg beskyttet henne. Hun skulle hente den, men kom aldri. Bagen ble stående igjen. Det var galt av meg å holde det tilbake.",
-                ["review:ingrid-note", "review:maria-statement"], ["evidence:travel-bag"], [new("person:maria", "evidence:ingrid-note")]),
+                ["review:ingrid-note", "review:maria-statement"], ["evidence:travel-bag"], [new("person:maria", "evidence:ingrid-note")], approaches: [
+                    new("open", "Gi Maria rom til å forklare", "Takk for at jeg får forklare det selv."),
+                    new("document", "Legg frem notatet først", "Jeg skjønner at jeg må forklare det notatet.")]),
+            A("maria-open-followup", "interview", "maria", "Be Maria utdype hvorfor hun holdt opplysningene tilbake",
+                "Jeg trodde jeg beskyttet henne ved å tie om planen. Det var galt. At hun hadde tenkt å dra, forklarer ikke hvorfor hun aldri hentet bagen.",
+                ["action:maria-plan", "choice:maria-plan:open", "review:travel-bag"], []),
+            A("maria-document-followup", "interview", "maria", "Be Maria skille mellom det hun vet og det hun antar",
+                "Bagen ble stående hos meg. Det kan jeg bekrefte. Den planlagte hentingen er ikke det samme som at hun kom frem. Jeg kan ikke forklare hvor hun ble av.",
+                ["action:maria-plan", "choice:maria-plan:document", "review:travel-bag"], []),
             A("jonas-call", "interview", "jonas", "Be Jonas forklare samtalen kl. 21.47",
                 "Det var meg hun snakket med. Vi hadde hatt et forhold i omtrent tre måneder, men hun hadde avsluttet det. Jeg var gift og redd for at det skulle bli kjent. Den kvelden gjorde hun det klart at det var over. Jeg løy om kontakten. Jeg kan ikke fortelle dere hva som skjedde etter at hun dro.",
                 ["review:phone-match", "review:jonas-statement"], ["evidence:ingrid-letter"], [new("evidence:phone-match", "evidence:jonas-statement")]),
@@ -102,7 +110,16 @@ public static class Case01GameplaySeed
         foreach (var record in CreateEvidence())
             if (!await database.Evidence.AnyAsync(x => x.CaseId == record.CaseId && x.Id == record.Id)) database.Evidence.Add(record);
         foreach (var action in CreateActions())
-            if (!await database.CaseActions.AnyAsync(x => x.CaseId == action.CaseId && x.Id == action.Id)) database.CaseActions.Add(action);
+        {
+            var existing = await database.CaseActions.SingleOrDefaultAsync(x => x.CaseId == action.CaseId && x.Id == action.Id);
+            if (existing is null) database.CaseActions.Add(action);
+            else
+            {
+                // Reviewed rule/display metadata only; never rewrite investigation flags or old choices.
+                if (action.Id == "maria-plan") existing.RuleJson = action.RuleJson;
+                existing.DisplayOrder = action.DisplayOrder;
+            }
+        }
         var events = new TimelineEvent[]
         {
             new() { Id = "vehicle-pickup", MinuteOfDay = 1336, DisplayOrder = 50, Title = "Påstigning ved butikken", Description = "Vitnet beskriver at Ingrid satte seg inn i en mørk bil uten synlig tvang. Føreren er ikke identifisert i vitneforklaringen.", IsEstimate = true, SourceEvidenceId = "vehicle-witness" },
