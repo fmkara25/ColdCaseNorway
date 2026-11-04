@@ -71,6 +71,23 @@ public sealed class CaseApiTests
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
     }
 
+    [Fact]
+    public async Task OpeningEvidenceExcludesHiddenBodiesAndVisibilityRules()
+    {
+        using var factory = new ApiFactory(false);
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync("/api/cases/1999-1218/evidence");
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("INTERNAL_SECRET", body);
+        using var json = JsonDocument.Parse(body);
+        Assert.Equal(1, json.RootElement.GetArrayLength());
+        Assert.Equal(new[] { "id", "title", "kind", "source", "body" }.Order(),
+            json.RootElement[0].EnumerateObject().Select(x => x.Name).Order());
+        using var missing = await client.GetAsync("/api/cases/unknown/evidence");
+        Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+    }
+
     private sealed class ApiFactory(bool fail) : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -102,6 +119,11 @@ public sealed class CaseApiTests
             Task.FromResult<IReadOnlyList<Person>>([
                 new() { CaseId = File.Id, Id = "ingrid", Name = "Ingrid Solberg", Age = 23, Role = "Savnet", Introduction = "Savnet etter kveldsvakten.", IsInitiallyVisible = true },
                 new() { CaseId = File.Id, Id = "hidden", Name = "INTERNAL_SECRET", IsInitiallyVisible = false }
+            ]);
+        public Task<IReadOnlyList<Evidence>> ListEvidenceAsync(string caseId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<Evidence>>([
+                new() { Id = "bus-ticket", Title = "Bussbillett", Kind = "Billett", Source = "Arkiv", Body = "Billetten ble ikke brukt.", IsInitiallyVisible = true },
+                new() { Id = "hidden", Body = "INTERNAL_SECRET", IsInitiallyVisible = false }
             ]);
         public Task<CaseFile?> FindAsync(string id, CancellationToken cancellationToken) =>
             Task.FromResult(id == File.Id ? File : null);

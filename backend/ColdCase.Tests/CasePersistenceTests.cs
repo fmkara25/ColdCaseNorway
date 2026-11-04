@@ -30,6 +30,10 @@ public sealed class CasePersistenceTests
         var people = await repository.ListPeopleAsync("1999-1218", CancellationToken.None);
         Assert.Equal(new[] { "erik", "ingrid", "jonas", "maria" }, people.Select(x => x.Id));
         Assert.Empty(await repository.ListPeopleAsync("other-case", CancellationToken.None));
+        var evidence = await repository.ListEvidenceAsync("1999-1218", CancellationToken.None);
+        Assert.Equal(6, evidence.Count);
+        Assert.Contains("ikke brukt", evidence.Single(x => x.Id == "bus-ticket").Body);
+        Assert.Empty(await repository.ListEvidenceAsync("other-case", CancellationToken.None));
         Assert.Null(await repository.FindAsync("missing-case", CancellationToken.None));
     }
 }

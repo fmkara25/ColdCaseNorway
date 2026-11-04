@@ -2,9 +2,9 @@
 
 ## Current slice
 
-Archive → open case → overview → people register and details. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
+Archive → open case → overview → people register and details → opening evidence reader. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
 
-This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, evidence/unlock rules, interviews, timeline, map routes, board, notes, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
+This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, evidence unlock rules, interviews, timeline, map routes, board, notes, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
 
 ## Local startup (PowerShell, repository root)
 
@@ -82,3 +82,6 @@ npm run test:e2e
 ```
 
 Playwright starts its own API and Vite servers. Stop any existing processes on ports 5249/5173 first. It uses Development migrations and seed against the dedicated test connection, never the production database. People expose only opening introductions; hidden people and future interview revelations are not public API fields.
+
+
+Opening evidence exposes only six initial archive extracts. Reading marks use Zustand/localStorage, are case-scoped and provide no authorization or gameplay unlocks. They stay in the current browser and are not a server save. Hidden future evidence must be authorized server-side before any body is returned. Native modal dialogs provide keyboard focus containment, Escape-to-close and text enlargement. Browser CI verifies zoom and reading-state persistence.
