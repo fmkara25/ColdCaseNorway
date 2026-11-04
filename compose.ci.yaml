@@ -1,0 +1,6 @@
+# Isolated CI browser acceptance only. Never include in local play or deployment commands.
+# The API honors this flag only in Development; production rate limits remain unchanged.
+services:
+  api:
+    environment:
+      Testing__BrowserAcceptance: "true"

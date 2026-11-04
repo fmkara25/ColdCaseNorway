@@ -61,19 +61,19 @@ jobs:
       POSTGRES_PASSWORD: "ci-only;quote'test"
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose -f compose.yaml -f compose.play.yaml config --quiet
-      - run: docker compose -f compose.yaml -f compose.play.yaml up -d --build --wait --wait-timeout 180
+      - run: docker compose -f compose.yaml -f compose.play.yaml -f compose.ci.yaml config --quiet
+      - run: docker compose -f compose.yaml -f compose.play.yaml -f compose.ci.yaml up -d --build --wait --wait-timeout 180
       - name: Verify non-root app images
         run: |
           for service in api web; do
-            uid=$(docker compose -f compose.yaml -f compose.play.yaml exec -T "$service" id -u)
+            uid=$(docker compose -f compose.yaml -f compose.play.yaml -f compose.ci.yaml exec -T "$service" id -u)
             test "$uid" -ne 0
           done
       - run: python3 scripts/container-smoke.py write "$RUNNER_TEMP/coldcase.cookies"
       - name: Recreate stack without removing its database volume
         run: |
-          docker compose -f compose.yaml -f compose.play.yaml down
-          docker compose -f compose.yaml -f compose.play.yaml up -d --wait --wait-timeout 180
+          docker compose -f compose.yaml -f compose.play.yaml -f compose.ci.yaml down
+          docker compose -f compose.yaml -f compose.play.yaml -f compose.ci.yaml up -d --wait --wait-timeout 180
       - run: python3 scripts/container-smoke.py read "$RUNNER_TEMP/coldcase.cookies"
       - uses: actions/setup-node@v4
         with:
@@ -95,12 +95,13 @@ jobs:
             frontend/test-results/comparison-*/**/*.png
             frontend/test-results/timeline-*/**/*.png
             frontend/test-results/map-*/**/*.png
+            frontend/test-results/board-*/**/*.png
             frontend/test-results/**/error-context.md
           if-no-files-found: ignore
           retention-days: 7
       - name: Container diagnostics
         if: failure()
-        run: docker compose -f compose.yaml -f compose.play.yaml logs --no-color --tail 150
+        run: docker compose -f compose.yaml -f compose.play.yaml -f compose.ci.yaml logs --no-color --tail 150
       - name: Stop isolated CI stack
         if: always()
-        run: docker compose -f compose.yaml -f compose.play.yaml down
+        run: docker compose -f compose.yaml -f compose.play.yaml -f compose.ci.yaml down

@@ -10,7 +10,7 @@ export default defineConfig({
     {
       command: "dotnet run --project ../backend/ColdCase.Api --no-launch-profile --configuration Release",
       url: "http://localhost:5249/api/health",
-      env: { ASPNETCORE_ENVIRONMENT: "Development", ASPNETCORE_URLS: "http://localhost:5249", ConnectionStrings__ColdCase: process.env.TEST_DATABASE_CONNECTION },
+      env: { ASPNETCORE_ENVIRONMENT: "Development", Testing__BrowserAcceptance: "true", ASPNETCORE_URLS: "http://localhost:5249", ConnectionStrings__ColdCase: process.env.TEST_DATABASE_CONNECTION },
       timeout: 120_000,
       reuseExistingServer: false,
     },
