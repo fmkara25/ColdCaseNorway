@@ -37,6 +37,7 @@ Do not delete the volume/database or run the initial migration blindly. Back up 
 ### Migration workflow (repository root)
 
 ```powershell
+dotnet restore backend/ColdCase.slnx
 dotnet tool restore
 dotnet ef migrations has-pending-model-changes --project backend/ColdCase.Infrastructure
 dotnet ef migrations script --idempotent --project backend/ColdCase.Infrastructure --output migrations.sql
