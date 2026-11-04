@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
-import { ApiError, isCaseList, isCaseFile, fetchJson, formatDate, type CaseFile, type CaseSummary } from "./api";
+import { Link, useOutletContext } from "react-router-dom";
+import { ApiError, isCaseList, fetchJson, formatDate, type CaseFile, type CaseSummary } from "./api";
 
-function Feedback({ error, retry }: { error?: Error | null; retry: () => void }) {
+export function Feedback({ error, retry }: { error?: Error | null; retry: () => void }) {
   return <section className="feedback" role={error ? "alert" : "status"}>
     <h2>{error ? (error instanceof ApiError ? error.message : "Ingen forbindelse til saksarkivet.") : "Henter saksopplysninger …"}</h2>
     {error instanceof ApiError && error.status === 404 ? <Link to="/">Til saksarkivet</Link> : error && <><p>Kontroller forbindelsen og prøv igjen.</p><button onClick={retry}>Prøv igjen</button></>}
@@ -27,18 +27,11 @@ export function CaseArchive() {
   </main>;
 }
 
-const sections = ["PERSONER", "BEVIS", "TIDSLINJE", "KART", "TAVLE", "NOTATER"];
 export function CaseOverview() {
-  const { caseId } = useParams();
-  const query = useQuery({ queryKey: ["cases", caseId], queryFn: ({ signal }) => fetchJson<CaseFile>(`/api/cases/${encodeURIComponent(caseId ?? "")}`, signal, isCaseFile) });
-  return <div className="workstation">
-    <aside><Link className="brand" to="/">COLD CASE<br/><span>NORWAY</span></Link><p className="eyebrow">ARBEIDSOMRÅDE</p><nav aria-label="Saksverktøy"><span className="nav-active" aria-current="page">OVERSIKT</span>{sections.map(section => <span className="nav-unavailable" key={section}>{section}<small>Kommer senere</small></span>)}</nav><Link className="back-link" to="/">← Saksarkiv</Link></aside>
-    <main className="workspace"><header className="workspace-header"><span>SAK / {caseId}</span><span className="status">Uoppklart</span></header>
-      {query.isPending || query.isError ? <Feedback error={query.error} retry={() => { void query.refetch(); }} /> : <>
-        <div className="overview-heading"><p className="eyebrow">GJENÅPNET ETTERFORSKNING</p><h1>{query.data.title}</h1><p>{query.data.location} · {formatDate(query.data.disappearanceDate)}</p></div>
-        <div className="overview-grid"><article className="report"><div className="report-meta"><span>ARKIVUTDRAG</span><span>{query.data.id}</span></div><h2>Den første vurderingen</h2><p>{query.data.initialReport}</p><hr/><p className="report-note">Dette er utgangspunktet for etterforskningen. Opplysningene må vurderes opp mot de øvrige kildene i saken.</p></article>
-        <section className="person-summary"><p className="eyebrow">SAVNET PERSON</p><div className="monogram" aria-hidden="true">{query.data.missingPerson.split(" ").map(part => part[0]).join("")}</div><h2>{query.data.missingPerson}</h2><p>{query.data.age} år ved forsvinningen</p><hr/><p className="eyebrow">UTGANGSPUNKT</p><p>Hva skjedde den kvelden?</p></section></div>
-      </>}
-    </main>
-  </div>;
+  const file = useOutletContext<CaseFile>();
+  return <>
+        <div className="overview-heading"><p className="eyebrow">GJENÅPNET ETTERFORSKNING</p><h1>{file.title}</h1><p>{file.location} · {formatDate(file.disappearanceDate)}</p></div>
+        <div className="overview-grid"><article className="report"><div className="report-meta"><span>ARKIVUTDRAG</span><span>{file.id}</span></div><h2>Den første vurderingen</h2><p>{file.initialReport}</p><hr/><p className="report-note">Dette er utgangspunktet for etterforskningen. Opplysningene må vurderes opp mot de øvrige kildene i saken.</p></article>
+        <section className="person-summary"><p className="eyebrow">SAVNET PERSON</p><div className="monogram" aria-hidden="true">{file.missingPerson.split(" ").map(part => part[0]).join("")}</div><h2>{file.missingPerson}</h2><p>{file.age} år ved forsvinningen</p><hr/><p className="eyebrow">UTGANGSPUNKT</p><p>Hva skjedde den kvelden?</p></section></div>
+  </>;
 }
