@@ -9,13 +9,13 @@ import { Feedback } from "./CasePages";
 export function CaseLayout() {
   const { caseId } = useParams();
   const { pathname } = useLocation();
-  const peopleStage = /\/people(?:\/|$)/.test(pathname);
+  const focusedStage = /\/(?:people|evidence)(?:\/|$)/.test(pathname);
   const desk = pathname.replace(/\/$/, "") === `/cases/${encodeURIComponent(caseId ?? "")}`;
   const query = useQuery({ queryKey: ["cases", caseId], queryFn: ({ signal }) => fetchJson<CaseFile>(`/api/cases/${encodeURIComponent(caseId ?? "")}`, signal, isCaseFile) });
   const progress = useProgress(caseId ?? "", query.isSuccess);
   return <SoundProvider><div className="game-frame">
     <header className="game-header"><Link className="game-brand" to="/">COLD CASE <span>NORWAY</span></Link><span className="game-case-id">SAK / {caseId}</span><SoundControls /><span className="status">{progress.data?.isReconstructed ? "Rekonstruert" : "Uoppklart"}</span></header>
-    <main id="main-content" tabIndex={-1} className="game-workspace" aria-label="Etterforskningsområde"><div className={desk || peopleStage ? "desk-viewport" : "tool-viewport"}>
+    <main id="main-content" tabIndex={-1} className="game-workspace" aria-label="Etterforskningsområde"><div className={desk || focusedStage ? "desk-viewport" : "tool-viewport"}>
       {query.isPending || query.isError ? <Feedback error={query.error} retry={() => { void query.refetch(); }} /> : <Outlet context={query.data} />}
     </div></main>
     <footer className="game-footer"><Link to={`/cases/${encodeURIComponent(caseId ?? "")}`}>↖ Til skrivebordet</Link>
