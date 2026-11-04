@@ -38,5 +38,6 @@ public static class CaseSeed
             database.People.Add(person);
         }
         await database.SaveChangesAsync();
+        await OpeningEvidenceSeed.InitializeAsync(database);
     }
 }

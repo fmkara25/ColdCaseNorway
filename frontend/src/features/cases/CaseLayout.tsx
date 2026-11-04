@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useParams } from "react-router-dom";
 import { fetchJson, isCaseFile, type CaseFile } from "./api";
 import { Feedback } from "./CasePages";
 
-const upcoming = ["BEVIS", "TIDSLINJE", "KART", "TAVLE", "NOTATER"];
+const upcoming = ["TIDSLINJE", "KART", "TAVLE", "NOTATER"];
 export function CaseLayout() {
   const { caseId } = useParams();
   const query = useQuery({ queryKey: ["cases", caseId], queryFn: ({ signal }) => fetchJson<CaseFile>(`/api/cases/${encodeURIComponent(caseId ?? "")}`, signal, isCaseFile) });
@@ -13,6 +13,7 @@ export function CaseLayout() {
       <nav aria-label="Saksverktøy">
         <NavLink end to={`/cases/${encodeURIComponent(caseId ?? "")}`} className={({ isActive }) => isActive ? "nav-active" : ""}>OVERSIKT</NavLink>
         <NavLink to="people" className={({ isActive }) => isActive ? "nav-active" : ""}>PERSONER</NavLink>
+        <NavLink to="evidence" className={({ isActive }) => isActive ? "nav-active" : ""}>BEVIS</NavLink>
         {upcoming.map(section => <span className="nav-unavailable" key={section}>{section}<small>Kommer senere</small></span>)}
       </nav><Link className="back-link" to="/">← Saksarkiv</Link>
     </aside>

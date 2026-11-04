@@ -9,8 +9,18 @@ public sealed class CaseDbContext(DbContextOptions<CaseDbContext> options) : DbC
 
     public DbSet<Person> People => Set<Person>();
 
+    public DbSet<Evidence> Evidence => Set<Evidence>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var evidence = modelBuilder.Entity<Evidence>();
+        evidence.HasKey(x => new { x.CaseId, x.Id });
+        evidence.Property(x => x.CaseId).HasMaxLength(32);
+        evidence.Property(x => x.Id).HasMaxLength(64);
+        evidence.Property(x => x.Title).HasMaxLength(200).IsRequired();
+        evidence.Property(x => x.Kind).HasMaxLength(100).IsRequired();
+        evidence.Property(x => x.Source).HasMaxLength(200).IsRequired();
+        evidence.HasOne<CaseFile>().WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
         var person = modelBuilder.Entity<Person>();
         person.HasKey(x => new { x.CaseId, x.Id });
         person.Property(x => x.CaseId).HasMaxLength(32);

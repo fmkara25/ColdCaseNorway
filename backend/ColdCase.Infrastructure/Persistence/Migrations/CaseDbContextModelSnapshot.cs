@@ -38,5 +38,20 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
             entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany()
                 .HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
         });
+        modelBuilder.Entity("ColdCase.Domain.Cases.Evidence", entity =>
+        {
+            entity.Property<string>("CaseId").HasMaxLength(32).HasColumnType("character varying(32)");
+            entity.Property<string>("Id").HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<string>("Title").IsRequired().HasMaxLength(200).HasColumnType("character varying(200)");
+            entity.Property<string>("Kind").IsRequired().HasMaxLength(100).HasColumnType("character varying(100)");
+            entity.Property<string>("Source").IsRequired().HasMaxLength(200).HasColumnType("character varying(200)");
+            entity.Property<string>("Body").IsRequired().HasColumnType("text");
+            entity.Property<int>("DisplayOrder").HasColumnType("integer");
+            entity.Property<bool>("IsInitiallyVisible").HasColumnType("boolean");
+            entity.HasKey("CaseId", "Id");
+            entity.ToTable("Evidence");
+            entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany()
+                .HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+        });
     }
 }
