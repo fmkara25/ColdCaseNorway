@@ -101,12 +101,28 @@ test("case branches progress through reviewed evidence, saved links and verified
   });
   await expect(page.locator(".route-result")).toContainText("43,2 km");
   await page.getByRole("link", { name: "Bruk ruten i rekonstruksjonen" }).click();
-  await page.getByLabel("Hvem kjørte bilen?", { exact: true }).selectOption("lars");
-  await page.getByLabel("Hvordan kom Ingrid inn i bilen?", { exact: true }).selectOption("voluntary");
-  await page.getByLabel("Hva utløste hendelsen?", { exact: true }).selectOption("accident");
-  await page.getByLabel("Hvorfor ble hendelsen skjult?", { exact: true }).selectOption("fear");
-  await page.getByLabel("Hvor oppsto den sentrale hendelsen?", { exact: true }).selectOption("mill-road");
-  for (const title of ["Kjøretøyet ved butikken", "Kjørebok: bil 14", "Arbeidsordren", "Varelinjene fra Skardal Nord", "Skaden foran til høyre", "Den rengjorte bilen", "Bussbillett til Trondheim"]) await page.getByLabel(`Velg ${title}`, { exact: true }).check();
+  const reconstruction = await (await page.request.get(session + "/reconstruction")).json();
+  for (let i=0; i<reconstruction.questions.length; i++) {
+    const question = reconstruction.questions[i];
+    const option = question.options.find((item:{id:string}) => item.id === answers[question.id as keyof typeof answers]);
+    await page.getByRole("radio", { name:option.label, exact:true }).check();
+    await page.getByRole("button", { name:i < reconstruction.questions.length - 1 ? "Neste vurdering" : "Velg støttende kilder ↗", exact:true }).click();
+  }
+  for (const title of ["Kjøretøyet ved butikken", "Kjørebok: bil 14", "Arbeidsordren", "Varelinjene fra Skardal Nord", "Skaden foran til høyre", "Den rengjorte bilen", "Bussbillett til Trondheim"]) {
+    const choice = page.getByRole("checkbox", { name:`Velg ${title}`, exact:true });
+    for (let attempt=0; attempt<50 && !await choice.count(); attempt++) {
+      const next = page.getByRole("button", { name:"Neste støttekilder", exact:true });
+      if (await next.isEnabled()) await next.click();
+      else {
+        const previous = page.getByRole("button", { name:"Forrige støttekilder", exact:true });
+        while (await previous.isEnabled()) await previous.click();
+      }
+    }
+    await choice.check();
+  }
+  await page.getByRole("button", { name:"Kontroller ruten ↗", exact:true }).click();
+  await expect(page.getByRole("region", { name:"Stedene i ruteutkastet", exact:true }).getByRole("listitem")).toHaveCount(routeIds.length);
+  await page.getByRole("button", { name:"Se samlet vurdering ↗", exact:true }).click();
   await page.getByRole("button", { name: "Lever rekonstruksjonen" }).click();
   await expect(page.getByRole("heading", { name: "Rekonstruksjon levert" })).toBeVisible();
   await expect(page.locator(".epilogue")).toContainText("Ingrid ble ikke funnet");
