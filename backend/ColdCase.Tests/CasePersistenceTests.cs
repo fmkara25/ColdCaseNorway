@@ -60,6 +60,22 @@ public sealed class CasePersistenceTests
         Assert.False(await investigations.SaveBoardAsync(saved.Id, saved.CaseId, access, 0, boardJson, CancellationToken.None));
         var restored = await investigations.ReadAsync(saved.CaseId, access, CancellationToken.None);
         Assert.NotNull(restored); Assert.Equal(1, restored.Version); Assert.Contains("Persisted note", restored.BoardJson);
+        var game = new GameplayRepository(database);
+        var opening = await game.MaterialsAsync("1999-1218", new HashSet<string>(), CancellationToken.None);
+        Assert.DoesNotContain(opening.People, x => x.Id == "lars");
+        Assert.DoesNotContain(opening.Evidence, x => x.Id == "lars-account");
+        var granted = await game.MaterialsAsync("1999-1218", new HashSet<string> { "person:lars", "evidence:lars-account", "location:mill-road", "road:market-mill" }, CancellationToken.None);
+        Assert.Contains(granted.People, x => x.Id == "lars");
+        Assert.Contains(granted.Evidence, x => x.Id == "lars-account");
+        Assert.Contains(granted.Map.Roads, x => x.Id == "market-mill");
+        var empty = await game.MaterialsAsync("other-case", new HashSet<string> { "person:lars", "evidence:lars-account" }, CancellationToken.None);
+        Assert.Empty(empty.People); Assert.Empty(empty.Evidence);
+        Assert.True(await investigations.SaveProgressAsync(saved.Id, saved.CaseId, access, 1, "[\"review:bus-ticket\"]", CancellationToken.None));
+        Assert.False(await investigations.SaveProgressAsync(saved.Id, saved.CaseId, access, 1, "[]", CancellationToken.None));
+        var afterProgress = await investigations.ReadAsync(saved.CaseId, access, CancellationToken.None);
+        Assert.NotNull(afterProgress); Assert.Equal(2, afterProgress.Version);
+        Assert.Contains("Persisted note", afterProgress.BoardJson);
+        Assert.Contains("review:bus-ticket", afterProgress.ProgressJson);
         Assert.Null(await repository.FindAsync("missing-case", CancellationToken.None));
     }
 }

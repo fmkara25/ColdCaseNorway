@@ -12,6 +12,7 @@ test("evidence document can be enlarged and reading progress survives refresh", 
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
   await page.getByRole("button", { name: "Marker som gjennomgått" }).click();
+  await expect(page.getByRole("button", { name: "Gjennomgått", exact: true })).toBeDisabled();
   await page.reload();
   await expect(page.getByRole("button", { name: "Gjennomgått", exact: true })).toBeDisabled();
   await page.goto("/cases/1999-1218/evidence/unknown");

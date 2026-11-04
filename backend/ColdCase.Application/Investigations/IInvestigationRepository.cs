@@ -6,5 +6,6 @@ public interface IInvestigationRepository
 {
     Task<Investigation?> ReadAsync(string caseId, string accessHash, CancellationToken cancellationToken);
     Task CreateAsync(Investigation investigation, CancellationToken cancellationToken);
+    Task<bool> SaveProgressAsync(Guid id, string caseId, string accessHash, int expectedVersion, string progressJson, CancellationToken cancellationToken);
     Task<bool> SaveBoardAsync(Guid id, string caseId, string accessHash, int expectedVersion, string boardJson, CancellationToken cancellationToken);
 }

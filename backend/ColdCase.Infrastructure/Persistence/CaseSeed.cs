@@ -41,5 +41,6 @@ public static class CaseSeed
         await OpeningEvidenceSeed.InitializeAsync(database);
         await OpeningTimelineSeed.InitializeAsync(database);
         await Case01MapSeed.InitializeAsync(database);
+        await Case01GameplaySeed.InitializeAsync(database);
     }
 }

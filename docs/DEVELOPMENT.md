@@ -2,9 +2,9 @@
 
 ## Current slice
 
-Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline → interactive schematic map/route estimator → server-saved board and notes. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
+Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline → interactive schematic map/route estimator → server-saved board and notes → gated research and interviews. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
 
-This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, evidence unlock rules, interviews, later map unlocks, board unlock rules, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
+This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
 
 ## Local startup (PowerShell, repository root)
 
@@ -106,3 +106,12 @@ Opening the board creates/resumes a case-scoped anonymous investigation. A rando
 Board snapshots use a versioned JSONB schema and a row version checked atomically on update. A stale write returns 409 and the frontend preserves its draft. Saving is explicit; navigation away with unsaved edits is guarded. Case ownership, allowed visible references, note sizes, finite coordinates, unique connections and payload limits are checked server-side. Writes require a custom header with no cross-origin CORS policy. Anonymous session creation is rate limited. Future reverse proxies must forward trusted client addresses correctly before internet deployment.
 
 The board currently persists cards, positions, notes and player hypotheses. It does not award progression or treat a connection label as truth. Server-authorized evidence/interview unlocks remain the next gameplay stage. Player note text is rendered as plain text, never HTML. API tests cover cookie/header isolation and stale writes; PostgreSQL tests cover persistence and atomic concurrency; browser tests cover drag, connection/note persistence, session isolation and unsaved navigation.
+
+
+## Deterministic research and interviews
+
+CaseActions stores authored responses and JSONB prerequisites/grants in PostgreSQL. The generic rule evaluator requires reviewed, accessible evidence and actual saved board connections; labels written by the player never grant knowledge. The route-check action verifies the chosen connected route and time-window condition on the server. Progress is private JSONB state updated atomically with the same investigation version as the board. Forged action IDs, hidden reviews and cross-session reads fail closed. Public case endpoints resolve only that request's accessible materials, including map endpoints/edges.
+
+The progress API exposes only currently available action labels and already completed response history, never all rules, prerequisites, grants or future answers. Read markers are now server-backed; old local reading marks are intentionally not imported as trusted progress. Board drafts can conflict after another tab advances progress; they remain protected by the existing 409 workflow.
+
+Story rhythm: independent Maria/Jonas branches, witness/route review, discovery of company records, mileage and terminal cross-references, staged Lars questions, verification of his extra-job claim and his unsolicited detail. Early accusation is a denial, not game over. The late account is presented as a statement to assess against the evidence, not medical proof or an automatic final reconstruction. Exact accident/death timestamps remain unknown. Final reconstruction is still pending.

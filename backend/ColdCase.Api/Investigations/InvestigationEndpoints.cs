@@ -12,7 +12,7 @@ public static class InvestigationEndpoints
     private const string Cookie = "ccn-investigation";
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private static string Hash(string token) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
-    private static string? Access(HttpContext context) => context.Request.Cookies.TryGetValue(Cookie, out var token) &&
+    internal static string? Access(HttpContext context) => context.Request.Cookies.TryGetValue(Cookie, out var token) &&
         token.Length == 64 && token.All(Uri.IsHexDigit) ? Hash(token) : null;
     private static IResult Unauthorized() => Results.Problem(statusCode: 401, title: "Åpne etterforskningen på nytt for å fortsette.");
     private static IResult Response(Investigation row) => Results.Ok(new
@@ -55,15 +55,16 @@ public static class InvestigationEndpoints
             var row = hash is null ? null : await investigations.ReadAsync(id, hash, cancellationToken);
             return row is null ? Unauthorized() : Response(row);
         });
-        group.MapPut("/board", async (string id, BoardSave save, HttpContext context, ICaseRepository cases, IInvestigationRepository investigations, CancellationToken cancellationToken) =>
+        group.MapPut("/board", async (string id, BoardSave save, HttpContext context, ICaseRepository cases, IInvestigationRepository investigations, GameplayView game, CancellationToken cancellationToken) =>
         {
             var hash = Access(context);
             var row = hash is null ? null : await investigations.ReadAsync(id, hash, cancellationToken);
             if (row is null || hash is null) return Unauthorized();
-            var people = await cases.ListPeopleAsync(id, cancellationToken);
-            var evidence = await cases.ListEvidenceAsync(id, cancellationToken);
-            var accessible = people.Where(x => x.IsInitiallyVisible).Select(x => "person:" + x.Id)
-                .Concat(evidence.Where(x => x.IsInitiallyVisible).Select(x => "evidence:" + x.Id)).ToHashSet();
+            var material = await game.MaterialsAsync(id, cancellationToken);
+            var people = material.People;
+            var evidence = material.Evidence;
+            var accessible = people.Select(x => "person:" + x.Id)
+                .Concat(evidence.Select(x => "evidence:" + x.Id)).ToHashSet();
             if (save.Version < 0 || !BoardValidation.IsValid(save.Board, accessible))
                 return Results.Problem(statusCode: 400, title: "Tavlen inneholder ugyldige eller utilgjengelige opplysninger.");
             var json = JsonSerializer.Serialize(save.Board, Json);

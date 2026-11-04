@@ -418,3 +418,15 @@ button:disabled { cursor:default; opacity:.55; }
 @media(max-width:1100px) { .board-workspace { grid-template-columns:1fr; } .board-tools { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; } }
 
 @media(min-width:1101px) { .board-tools { max-height:760px; overflow-y:auto; padding-right:6px; } .board-area { align-self:start; } }
+
+.action-panel { margin-top:35px; padding:24px; background:#19212a; border:1px solid #394550; }
+.action-panel h2 { font-family:Georgia,serif; font-size:24px; margin-bottom:15px; }
+.action-panel p { font-size:13px; line-height:1.85; }
+.action-panel a { color:#d0b17a; text-decoration:underline; }
+.action-option { padding:16px 0; border-top:1px solid #394550; }
+.action-option button,.action-panel>div[role=alert] button { padding:10px 14px; font-size:12px; text-align:left; }
+.action-option label { font-size:12px; display:block; margin:12px 0; }
+.action-option select { display:block; width:100%; max-width:400px; background:#101820; color:#e2e6e9; border:1px solid #52606c; padding:9px; margin:7px 0 15px; }
+.action-history article { border-top:1px solid #394550; padding-top:20px; margin-top:22px; }
+.action-history h3 { font-weight:550; font-size:14px; color:#d0b17a; }
+.action-history p { white-space:pre-wrap; }

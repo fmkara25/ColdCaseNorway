@@ -108,12 +108,27 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
             entity.Property<string>("CaseId").IsRequired().HasMaxLength(32).HasColumnType("character varying(32)");
             entity.Property<string>("AccessHash").IsRequired().HasMaxLength(64).HasColumnType("character varying(64)");
             entity.Property<int>("Version").HasColumnType("integer");
+            entity.Property<string>("ProgressJson").IsRequired().HasColumnType("jsonb").HasDefaultValue("[]");
             entity.Property<string>("BoardJson").IsRequired().HasColumnType("jsonb");
             entity.Property<DateTimeOffset>("CreatedAt").HasColumnType("timestamp with time zone");
             entity.HasKey("Id");
             entity.HasIndex("AccessHash").IsUnique();
             entity.HasIndex("CaseId");
             entity.ToTable("Investigations");
+            entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany().HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+        });
+        modelBuilder.Entity("ColdCase.Domain.Investigations.CaseAction", entity =>
+        {
+            entity.Property<string>("CaseId").HasMaxLength(32).HasColumnType("character varying(32)");
+            entity.Property<string>("Id").HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<string>("Kind").IsRequired().HasMaxLength(32).HasColumnType("character varying(32)");
+            entity.Property<string>("PersonId").HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<string>("Label").IsRequired().HasMaxLength(200).HasColumnType("character varying(200)");
+            entity.Property<string>("Response").IsRequired().HasColumnType("text");
+            entity.Property<string>("RuleJson").IsRequired().HasColumnType("jsonb");
+            entity.Property<int>("DisplayOrder").HasColumnType("integer");
+            entity.HasKey("CaseId", "Id");
+            entity.ToTable("CaseActions");
             entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany().HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
         });
     }
