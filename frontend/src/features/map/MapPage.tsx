@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { emptyRoute, useTheoryStore } from "../reconstruction/theoryStore";
 import { fetchJson } from "../cases/api";
 import { Feedback } from "../cases/CasePages";
 import { compareWindow, estimateRoute, isMapGraph, type MapGraph } from "./api";
@@ -8,7 +9,10 @@ import { compareWindow, estimateRoute, isMapGraph, type MapGraph } from "./api";
 export function MapPage() {
   const { caseId = "" } = useParams();
   const query = useQuery({ queryKey: ["cases", caseId, "map"], queryFn: ({ signal }) => fetchJson<MapGraph>(`/api/cases/${encodeURIComponent(caseId)}/map`, signal, isMapGraph) });
-  const [path, setPath] = useState<string[]>([]);
+  const routes = useTheoryStore(state => state.routes);
+  const setRoute = useTheoryStore(state => state.setRoute);
+  const path = routes[caseId] ?? emptyRoute;
+  const setPath = (next: string[] | ((current: string[]) => string[])) => setRoute(caseId, typeof next === "function" ? next(path) : next);
   const [mode, setMode] = useState<"walk" | "drive">("walk");
   const [stops, setStops] = useState(0);
   const [available, setAvailable] = useState("");
@@ -66,6 +70,7 @@ export function MapPage() {
         {path.length >= 2 && route.isError && <><p>Kunne ikke beregne ruten.</p><button onClick={() => { void route.refetch(); }}>Prøv igjen</button></>}
         {estimate && <><strong>{distance.format(estimate.meters / 1000)} km</strong><p>{min}–{max} minutter{stops > 0 ? `, inkludert ${stops} minutter til stopp` : ""}</p>{message && <p>{message}</p>}</>}
       </div>
+      {path.length >= 2 && <Link className="primary-button" to="../reconstruction">Bruk ruten i rekonstruksjonen</Link>}
       <p className="map-caption">Tidsanslagene er intervaller for denne fiktive modellen, ikke fasitsvar om hvor noen var.</p>
     </section></div>
   </>;

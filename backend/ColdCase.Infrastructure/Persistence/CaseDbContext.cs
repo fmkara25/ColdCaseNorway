@@ -22,8 +22,15 @@ public sealed class CaseDbContext(DbContextOptions<CaseDbContext> options) : DbC
 
     public DbSet<CaseAction> CaseActions => Set<CaseAction>();
 
+    public DbSet<CaseSolution> CaseSolutions => Set<CaseSolution>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var solution = modelBuilder.Entity<CaseSolution>();
+        solution.HasKey(x => x.CaseId);
+        solution.Property(x => x.CaseId).HasMaxLength(32);
+        solution.Property(x => x.DefinitionJson).HasColumnType("jsonb").IsRequired();
+        solution.HasOne<CaseFile>().WithOne().HasForeignKey<CaseSolution>(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
         var action = modelBuilder.Entity<CaseAction>();
         action.HasKey(x => new { x.CaseId, x.Id });
         action.Property(x => x.CaseId).HasMaxLength(32);
@@ -38,6 +45,7 @@ public sealed class CaseDbContext(DbContextOptions<CaseDbContext> options) : DbC
         investigation.Property(x => x.Id).ValueGeneratedNever();
         investigation.Property(x => x.CaseId).HasMaxLength(32).IsRequired();
         investigation.Property(x => x.AccessHash).HasMaxLength(64).IsRequired();
+        investigation.Property(x => x.ReconstructionJson).HasColumnType("jsonb");
         investigation.Property(x => x.ProgressJson).HasColumnType("jsonb").HasDefaultValue("[]").IsRequired();
         investigation.Property(x => x.BoardJson).HasColumnType("jsonb").IsRequired();
         investigation.HasIndex(x => x.AccessHash).IsUnique();

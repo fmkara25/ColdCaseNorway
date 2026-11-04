@@ -30,6 +30,7 @@ builder.Services.AddScoped<ICaseRepository, CaseRepository>();
 builder.Services.AddScoped<IMapRepository, MapRepository>();
 builder.Services.AddScoped<IInvestigationRepository, InvestigationRepository>();
 builder.Services.AddScoped<IGameplayRepository, GameplayRepository>();
+builder.Services.AddScoped<IReconstructionRepository, ReconstructionRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GameplayView>();
 
@@ -92,6 +93,7 @@ app.UseRateLimiter();
 app.MapCaseMapEndpoints();
 app.MapInvestigationEndpoints();
 app.MapGameplayEndpoints();
+app.MapReconstructionEndpoints();
 app.Run();
 
 public partial class Program { }

@@ -76,6 +76,15 @@ public sealed class CasePersistenceTests
         Assert.NotNull(afterProgress); Assert.Equal(2, afterProgress.Version);
         Assert.Contains("Persisted note", afterProgress.BoardJson);
         Assert.Contains("review:bus-ticket", afterProgress.ProgressJson);
+        var solutions = new ReconstructionRepository(database);
+        Assert.NotNull(await solutions.FindAsync("1999-1218", CancellationToken.None));
+        Assert.Null(await solutions.FindAsync("other-case", CancellationToken.None));
+        var theoryJson = JsonSerializer.Serialize(new ReconstructionSubmission(new() { ["driver"] = "lars" }, ["vehicle-log"], ["market"]));
+        Assert.True(await investigations.SaveReconstructionAsync(saved.Id, saved.CaseId, access, 2, "[\"stage:closed\"]", theoryJson, CancellationToken.None));
+        Assert.False(await investigations.SaveReconstructionAsync(saved.Id, saved.CaseId, access, 2, "[]", theoryJson, CancellationToken.None));
+        var closed = await investigations.ReadAsync(saved.CaseId, access, CancellationToken.None);
+        Assert.NotNull(closed); Assert.Equal(3, closed.Version); Assert.NotNull(closed.ReconstructionJson);
+        Assert.Contains("Persisted note", closed.BoardJson);
         Assert.Null(await repository.FindAsync("missing-case", CancellationToken.None));
     }
 }
