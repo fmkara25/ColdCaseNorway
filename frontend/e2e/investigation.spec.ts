@@ -87,7 +87,18 @@ test("case branches progress through reviewed evidence, saved links and verified
   expect(notClosed.isReconstructed).toBeFalsy();
   await page.goto("/cases/1999-1218/map");
   const names = ["Selskapets base", "Arbeidsstedet", "Butikken", "Gamle Møllevei", "Veikrysset mot sykehuset", "Gamle Møllevei", "Det gamle serviceområdet", "Skardal Nord bensinstasjon", "Selskapets base"];
-  for (const name of names) await page.getByRole("button", { name:`Legg til ${name} i ruten`, exact:true }).click();
+  for (const name of names) await test.step(`Append ${name} through the place deck`, async () => {
+    const card = page.getByRole("button", { name, exact:true });
+    for (let attempt=0; attempt<24 && !await card.count(); attempt++) {
+      const next = page.getByRole("button", { name:"Neste steder", exact:true });
+      if (await next.isEnabled()) await next.click();
+      else {
+        const previous = page.getByRole("button", { name:"Forrige steder", exact:true });
+        while (await previous.isEnabled()) await previous.click();
+      }
+    }
+    await card.click();
+  });
   await expect(page.locator(".route-result")).toContainText("43,2 km");
   await page.getByRole("link", { name: "Bruk ruten i rekonstruksjonen" }).click();
   await page.getByLabel("Hvem kjørte bilen?", { exact: true }).selectOption("lars");

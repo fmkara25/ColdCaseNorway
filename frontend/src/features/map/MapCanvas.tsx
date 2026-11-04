@@ -6,8 +6,11 @@ export function MapCanvas({ graph, path, append, canAppend }: { graph:MapGraph; 
   const [pan, setPan] = useState({ x:0, y:0 });
   const drag = useRef<{x:number;y:number;panX:number;panY:number} | null>(null);
   const distance = new Intl.NumberFormat("nb-NO", { maximumFractionDigits:2 });
+  const xs = graph.locations.map(point => point.x);
+  const ys = graph.locations.map(point => point.y);
+  const viewBox = xs.length ? `${Math.min(...xs) - 100} ${Math.min(...ys) - 100} ${Math.max(...xs) - Math.min(...xs) + 200} ${Math.max(...ys) - Math.min(...ys) + 200}` : "0 0 1120 720";
   return <section className="route-map" aria-label="Kart over tilgjengelige steder"><div className="map-toolbar"><span className="eyebrow">SKJEMATISK VEINETT</span><button aria-label="Zoom ut" disabled={zoom <= .75} onClick={() => setZoom(value => Math.max(.75, value - .25))}>−</button><span>{Math.round(zoom * 100)} %</span><button aria-label="Zoom inn" disabled={zoom >= 2} onClick={() => setZoom(value => Math.min(2, value + .25))}>+</button><button onClick={() => { setZoom(1); setPan({ x:0, y:0 }); }}>Tilpass kart</button></div>
-      <svg className="case-map" viewBox="0 0 1120 720" tabIndex={0} onKeyDown={event => {
+      <svg className="case-map" viewBox={viewBox} tabIndex={0} onKeyDown={event => {
         if (event.target !== event.currentTarget) return;
         const moves:Record<string, {x:number;y:number}> = { ArrowLeft:{x:40,y:0}, ArrowRight:{x:-40,y:0}, ArrowUp:{x:0,y:40}, ArrowDown:{x:0,y:-40} };
         const move = moves[event.key]; if (move) { event.preventDefault(); setPan(current => ({ x:current.x + move.x, y:current.y + move.y })); }
