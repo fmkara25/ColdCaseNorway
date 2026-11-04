@@ -40,14 +40,14 @@ export function DeskPage() {
   const command = useMutation({ mutationFn: ({ type, id }: Command) => progressCommand(caseId,
     type === "review" ? `evidence/${encodeURIComponent(id)}/review` : `actions/${encodeURIComponent(id)}`),
     onSuccess: async (value: Progress, variables) => {
-      const oldEvidence = new Set(evidence.data?.map(item => item.id));
-      const oldPeople = new Set(people.data?.map(item => item.id));
+      const oldEvidence = evidence.data ? new Set(evidence.data.map(item => item.id)) : null;
+      const oldPeople = people.data ? new Set(people.data.map(item => item.id)) : null;
       client.setQueryData(["progress", caseId], value);
       await Promise.all([client.invalidateQueries({ queryKey: key }), client.invalidateQueries({ queryKey: ["investigation", caseId] })]);
       const latestEvidence = client.getQueryData<Evidence[]>([...key, "evidence"]) ?? [];
       const latestPeople = client.getQueryData<Person[]>([...key, "people"]) ?? [];
       setOutcome({ response: variables.type === "review" ? "Opplysningene er tatt med i vurderingen. Det er fortsatt du som må vurdere hva de betyr." : value.history.find(item => item.id === variables.id)?.response ?? "Undersøkelsen er registrert.",
-        evidence: latestEvidence.filter(item => !oldEvidence.has(item.id)), people: latestPeople.filter(item => !oldPeople.has(item.id)) });
+        evidence: latestEvidence.filter(item => oldEvidence !== null && !oldEvidence.has(item.id)), people: latestPeople.filter(item => oldPeople !== null && !oldPeople.has(item.id)) });
       setSelected(null); setPanel("result");
     } });
   const items = evidence.data ?? [];
@@ -65,7 +65,7 @@ export function DeskPage() {
         {evidence.isPending || evidence.isError ? <Feedback error={evidence.error} retry={() => { void evidence.refetch(); }} /> : <>
           <div className="desk-objects">{items.slice(visiblePage * 3, visiblePage * 3 + 3).map((item, index) => <button key={item.id} className="paper-object" onClick={() => inspect(item)} aria-label={`Undersøk ${item.title}`}>
             <span className="paper-object-type">{item.kind}</span><span className="paper-mark" aria-hidden="true">{String(visiblePage * 3 + index + 1).padStart(2, "0")}</span>
-            <strong>{item.title}</strong><span className="paper-lines" aria-hidden="true" /><span className="paper-object-state">{reviewed.includes(item.id) ? "Tatt med i vurderingen" : "Åpne og undersøk"} <span aria-hidden="true">↗</span></span>
+            <strong>{item.title}</strong><span className="paper-excerpt" aria-hidden="true">{item.body.split("\n").slice(0, 3).join("\n")}</span><span className="paper-lines" aria-hidden="true" /><span className="paper-object-state">{reviewed.includes(item.id) ? "Tatt med i vurderingen" : "Åpne og undersøk"} <span aria-hidden="true">↗</span></span>
           </button>)}</div>
           {items.length === 0 && <p className="desk-empty">Ingen dokumenter er tilgjengelige.</p>}
           <div className="desk-pagination"><button aria-label="Forrige dokumenter" disabled={visiblePage === 0} onClick={() => setPage(visiblePage - 1)}>←</button><span>Dokumenter {items.length ? visiblePage * 3 + 1 : 0}–{Math.min(items.length, visiblePage * 3 + 3)} av {items.length}</span><button aria-label="Neste dokumenter" disabled={visiblePage >= pages - 1} onClick={() => setPage(visiblePage + 1)}>→</button></div>
@@ -89,7 +89,7 @@ export function DeskPage() {
         <div className="inspection-zoom"><button aria-label="Mindre dokumenttekst" disabled={zoom <= 100} onClick={() => setZoom(value => value - 20)}>A−</button><span>{zoom} %</span><button aria-label="Større dokumenttekst" disabled={zoom >= 180} onClick={() => setZoom(value => value + 20)}>A+</button></div>
         <article className="inspection-paper" style={{ fontSize: `${zoom}%` }}><span className="eyebrow">{selected.source}</span><h2>{selected.title}</h2><div>{selected.body}</div></article>
       </section><section className="inspection-decisions"><p className="eyebrow">VURDER KILDEN</p><h2>Hva vil du gjøre med opplysningene?</h2><p>En opplysning er et grunnlag for videre undersøkelser, ikke en konklusjon.</p>
-        <button className="decision-card" disabled={command.isPending || !progress.isSuccess || !!selectedReviewed} onClick={() => { command.reset(); command.mutate({ type: "review", id: selected.id }); }}><strong>{selectedReviewed ? "Tatt med i vurderingen" : command.isPending ? "Registrerer …" : "Ta med i vurderingen"}</strong><small>Behold kilden som grunnlag for videre spørsmål</small></button>
+        <button className="decision-card" aria-label={selectedReviewed ? "Tatt med i vurderingen" : "Ta med i vurderingen"} disabled={command.isPending || !progress.isSuccess || !!selectedReviewed} onClick={() => { command.reset(); command.mutate({ type: "review", id: selected.id }); }}><strong>{selectedReviewed ? "Tatt med i vurderingen" : command.isPending ? "Registrerer …" : "Ta med i vurderingen"}</strong><small>Behold kilden som grunnlag for videre spørsmål</small></button>
         <Link className="decision-card" to={`${root}/people`}><strong>Se forklaringene</strong><small>Sammenhold dokumentet med personopplysningene</small></Link>
         <Link className="decision-card" to={`${root}/timeline`}><strong>Åpne tidslinjen</strong><small>Sammenlign de dokumenterte tidspunktene</small></Link>
         {progress.isError && <div role="alert"><p>Lagring er ikke tilgjengelig ennå.</p><button onClick={() => { void progress.refetch(); }}>Prøv igjen</button></div>}

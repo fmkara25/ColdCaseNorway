@@ -13,13 +13,13 @@ test("desk stays inside the viewport and documents enlarge in an independently s
     const dialog = page.getByRole("dialog", { name:"Undersøk dokument", exact:true });
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole("heading", { name:"Bussbillett til Trondheim", exact:true })).toBeVisible();
+    if (size.width === 1366) await page.screenshot({ path:testInfo.outputPath("inspection-1366.png") });
     for (let i=0; i<4; i++) await dialog.getByRole("button", { name:"Større dokumenttekst" }).click();
     await expect(dialog.getByRole("button", { name:"Større dokumenttekst" })).toBeDisabled();
     const source = dialog.getByRole("region", { name:"Dokumentinnhold" });
     await source.evaluate(element => { element.scrollTop = element.scrollHeight; });
     expect(await source.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
     expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(false);
-    if (size.width === 1366) await page.screenshot({ path:testInfo.outputPath("inspection-1366.png") });
     await page.keyboard.press("Escape"); await expect(dialog).not.toBeVisible();
     await expect(page.getByRole("button", { name:"Undersøk Bussbillett til Trondheim", exact:true })).toBeFocused();
   }

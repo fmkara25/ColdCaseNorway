@@ -18,7 +18,7 @@ export function CaseLayout() {
       {query.isPending || query.isError ? <Feedback error={query.error} retry={() => { void query.refetch(); }} /> : <Outlet context={query.data} />}
     </div></main>
     <footer className="game-footer"><Link to={`/cases/${encodeURIComponent(caseId ?? "")}`}>↖ Til skrivebordet</Link>
-    <details className="game-tool-drawer" open={!desk} key={desk ? "desk" : "tools"}><summary>Mappen</summary>
+    <details className="game-tool-drawer" key={pathname}><summary>Mappen</summary>
       <nav aria-label="Saksverktøy">
         <NavLink end to={`/cases/${encodeURIComponent(caseId ?? "")}`} className={({ isActive }) => isActive ? "nav-active" : ""}>OVERSIKT</NavLink>
         <NavLink to="people" className={({ isActive }) => isActive ? "nav-active" : ""}>PERSONER</NavLink>
