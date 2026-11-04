@@ -33,7 +33,7 @@ export function ComparisonStage({ caseId, primary, evidence }: { caseId:string; 
   const dirty = label.length > 0 && !saved;
   const blocker = useBlocker(dirty);
   useEffect(() => { heading.current?.focus(); }, []);
-  useEffect(() => { if (targetId) right.current?.querySelector("h2")?.focus(); }, [targetId]);
+  useEffect(() => { if (targetId) right.current?.querySelector("h2")?.focus({ preventScroll:true }); }, [targetId]);
   useEffect(() => {
     if (blocker.state === "blocked" && !dirty) { blocker.proceed(); return; }
     if (blocker.state === "blocked" && !leave.current?.open) leave.current?.showModal();

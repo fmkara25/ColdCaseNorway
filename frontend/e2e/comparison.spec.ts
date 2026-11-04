@@ -12,12 +12,16 @@ test("evidence reader and comparison keep outer viewport fixed while source pane
     const second = page.getByRole("region", { name:"Andre kilde", exact:true });
     await expect(first).toContainText("Bussbillett til Trondheim"); await expect(second).toContainText("Samtalen kl. 21.47");
     for (let i=0; i<4; i++) await page.getByRole("button", { name:"Større sammenligningstekst", exact:true }).click();
+    if (size.width === 1366) {
+      for (let i=0; i<4; i++) await page.getByRole("button", { name:"Mindre sammenligningstekst", exact:true }).click();
+      await page.screenshot({ path:testInfo.outputPath("source-comparison.png") });
+      for (let i=0; i<4; i++) await page.getByRole("button", { name:"Større sammenligningstekst", exact:true }).click();
+    }
     const pane = first.getByRole("region"); await pane.evaluate(element => { element.scrollTop = element.scrollHeight; });
     expect(await pane.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
     expect(await page.evaluate(() => ({ x:document.documentElement.scrollWidth > innerWidth, y:document.documentElement.scrollHeight > innerHeight }))).toEqual({ x:false, y:false });
     const composer = await page.getByRole("region", { name:"Din hypotese" }).boundingBox();
     expect(composer!.y + composer!.height).toBeLessThanOrEqual(size.height - 40);
-    if (size.width === 1366) await page.screenshot({ path:testInfo.outputPath("source-comparison.png") });
   }
 });
 

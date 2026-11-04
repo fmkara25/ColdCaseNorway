@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("keyboard users can skip navigation and focus follows completed page changes", async ({ page, context }) => {
   await page.goto("/");
+  await expect(page.getByRole("link", { name:"Åpne sak" })).toBeVisible();
   await page.keyboard.press("Tab");
   const skip = page.getByRole("link", { name:"Hopp til innhold" });
   await expect(skip).toBeFocused(); await expect(skip).toBeVisible();
