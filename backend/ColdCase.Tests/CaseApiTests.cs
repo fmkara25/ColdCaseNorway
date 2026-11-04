@@ -1,4 +1,6 @@
 using System.Net;
+using ColdCase.Application.Investigations;
+using ColdCase.Domain.Investigations;
 using System.Net.Http.Json;
 using ColdCase.Application.Maps;
 using ColdCase.Infrastructure.Persistence;
@@ -132,6 +134,48 @@ public sealed class CaseApiTests
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
     }
 
+    [Fact]
+    public async Task InvestigationRequiresWriteHeaderOwnCookieAndCurrentVersion()
+    {
+        using var factory = new ApiFactory(false);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        const string endpoint = "/api/cases/1999-1218/investigation";
+        using var blocked = await client.PostAsync(endpoint, null);
+        Assert.Equal(HttpStatusCode.Forbidden, blocked.StatusCode);
+        client.DefaultRequestHeaders.Add("X-ColdCase-Request", "1");
+        using var opened = await client.PostAsync(endpoint, null);
+        opened.EnsureSuccessStatusCode();
+        Assert.Contains(opened.Headers.GetValues("Set-Cookie"), value => value.Contains("httponly", StringComparison.OrdinalIgnoreCase) && value.Contains("secure", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain("accessHash", await opened.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
+        var board = new BoardState(1, [new("n", "Min hypotese")], [new("note:n", 40, 50)], []);
+        using var saved = await client.PutAsJsonAsync(endpoint + "/board", new BoardSave(0, board));
+        saved.EnsureSuccessStatusCode();
+        using var stale = await client.PutAsJsonAsync(endpoint + "/board", new BoardSave(0, board));
+        Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
+        using var read = await client.GetAsync(endpoint);
+        Assert.Contains("Min hypotese", await read.Content.ReadAsStringAsync());
+        using var other = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        using var inaccessible = await other.GetAsync(endpoint);
+        Assert.Equal(HttpStatusCode.Unauthorized, inaccessible.StatusCode);
+        using var hidden = await client.PutAsJsonAsync(endpoint + "/board", new BoardSave(1, new(1, [], [new("person:hidden", 0, 0)], [])));
+        Assert.Equal(HttpStatusCode.BadRequest, hidden.StatusCode);
+    }
+
+    private sealed class StubInvestigationRepository : IInvestigationRepository
+    {
+        private readonly Dictionary<Guid, Investigation> rows = [];
+        public Task<Investigation?> ReadAsync(string caseId, string accessHash, CancellationToken cancellationToken) =>
+            Task.FromResult(rows.Values.SingleOrDefault(x => x.CaseId == caseId && x.AccessHash == accessHash));
+        public Task CreateAsync(Investigation investigation, CancellationToken cancellationToken)
+        { rows.Add(investigation.Id, investigation); return Task.CompletedTask; }
+        public Task<bool> SaveBoardAsync(Guid id, string caseId, string accessHash, int expectedVersion, string boardJson, CancellationToken cancellationToken)
+        {
+            if (!rows.TryGetValue(id, out var row) || row.CaseId != caseId || row.AccessHash != accessHash || row.Version != expectedVersion) return Task.FromResult(false);
+            row.BoardJson = boardJson; row.Version++;
+            return Task.FromResult(true);
+        }
+    }
+
     private sealed class StubMapRepository : IMapRepository
     {
         public Task<MapGraph> ReadAsync(string caseId, CancellationToken cancellationToken) =>
@@ -146,6 +190,8 @@ public sealed class CaseApiTests
             builder.UseSetting("ConnectionStrings:ColdCase", "Host=localhost;Database=unused;Username=unused");
             builder.ConfigureServices(services =>
             {
+                services.RemoveAll<IInvestigationRepository>();
+                services.AddSingleton<IInvestigationRepository>(new StubInvestigationRepository());
                 services.RemoveAll<IMapRepository>();
                 services.AddSingleton<IMapRepository>(new StubMapRepository());
                 services.RemoveAll<ICaseRepository>();

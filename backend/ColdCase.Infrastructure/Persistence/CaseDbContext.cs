@@ -1,4 +1,5 @@
 using ColdCase.Domain.Cases;
+using ColdCase.Domain.Investigations;
 using ColdCase.Domain.Maps;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,8 +18,18 @@ public sealed class CaseDbContext(DbContextOptions<CaseDbContext> options) : DbC
     public DbSet<MapLocation> MapLocations => Set<MapLocation>();
     public DbSet<MapRoad> MapRoads => Set<MapRoad>();
 
+    public DbSet<Investigation> Investigations => Set<Investigation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var investigation = modelBuilder.Entity<Investigation>();
+        investigation.HasKey(x => x.Id);
+        investigation.Property(x => x.Id).ValueGeneratedNever();
+        investigation.Property(x => x.CaseId).HasMaxLength(32).IsRequired();
+        investigation.Property(x => x.AccessHash).HasMaxLength(64).IsRequired();
+        investigation.Property(x => x.BoardJson).HasColumnType("jsonb").IsRequired();
+        investigation.HasIndex(x => x.AccessHash).IsUnique();
+        investigation.HasOne<CaseFile>().WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
         var location = modelBuilder.Entity<MapLocation>();
         location.HasKey(x => new { x.CaseId, x.Id });
         location.Property(x => x.CaseId).HasMaxLength(32);

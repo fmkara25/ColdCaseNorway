@@ -4,6 +4,7 @@ import { PeoplePage } from "../features/people/PeoplePage";
 import { EvidencePage } from "../features/evidence/EvidencePage";
 import { TimelinePage } from "../features/timeline/TimelinePage";
 import { MapPage } from "../features/map/MapPage";
+import { BoardPage } from "../features/board/BoardPage";
 import App from "../App";
 import { CaseOverview } from "../features/cases/CasePages";
 
@@ -11,6 +12,8 @@ export const router = createBrowserRouter([
   { path: "/", element: <App /> },
   { path: "/cases/:caseId", element: <CaseLayout />, children: [
     { index: true, element: <CaseOverview /> },
+    { path: "notes", element: <BoardPage notesOnly /> },
+    { path: "board", element: <BoardPage /> },
     { path: "map", element: <MapPage /> },
     { path: "timeline", element: <TimelinePage /> },
     { path: "evidence", element: <EvidencePage /> },
