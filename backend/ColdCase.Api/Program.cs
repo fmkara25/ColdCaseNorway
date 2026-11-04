@@ -1,4 +1,8 @@
 using ColdCase.Application.Cases;
+using ColdCase.Application.Investigations;
+using ColdCase.Api.Investigations;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using ColdCase.Application.Maps;
 using ColdCase.Api.Maps;
 using ColdCase.Api.Contracts;
@@ -6,6 +10,17 @@ using ColdCase.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 128 * 1024);
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("investigation-start", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+        { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        await Results.Problem(statusCode: 429, title: "For mange forespørsler. Vent litt og prøv igjen.").ExecuteAsync(context.HttpContext);
+    };
+});
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddDbContext<CaseDbContext>(options => options.UseNpgsql(
@@ -13,6 +28,7 @@ builder.Services.AddDbContext<CaseDbContext>(options => options.UseNpgsql(
     ?? throw new InvalidOperationException("ConnectionStrings:ColdCase is required.")));
 builder.Services.AddScoped<ICaseRepository, CaseRepository>();
 builder.Services.AddScoped<IMapRepository, MapRepository>();
+builder.Services.AddScoped<IInvestigationRepository, InvestigationRepository>();
 
 var app = builder.Build();
 app.UseExceptionHandler(handler => handler.Run(async context =>
@@ -69,7 +85,9 @@ app.MapGet("/api/cases/{id}/timeline", async (string id, ICaseRepository cases, 
     return Results.Ok(events.Where(x => x.IsInitiallyVisible).Select(x => new
         { x.Id, x.Title, x.Description, x.SourceEvidenceId, x.MinuteOfDay, x.IsEstimate, x.IsPlanned }));
 });
+app.UseRateLimiter();
 app.MapCaseMapEndpoints();
+app.MapInvestigationEndpoints();
 app.Run();
 
 public partial class Program { }

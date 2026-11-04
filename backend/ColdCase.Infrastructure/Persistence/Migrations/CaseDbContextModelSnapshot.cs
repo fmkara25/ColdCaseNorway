@@ -102,5 +102,19 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
             entity.HasOne("ColdCase.Domain.Maps.MapLocation", null).WithMany().HasForeignKey("CaseId", "FromLocationId").OnDelete(DeleteBehavior.Restrict).IsRequired();
             entity.HasOne("ColdCase.Domain.Maps.MapLocation", null).WithMany().HasForeignKey("CaseId", "ToLocationId").OnDelete(DeleteBehavior.Restrict).IsRequired();
         });
+        modelBuilder.Entity("ColdCase.Domain.Investigations.Investigation", entity =>
+        {
+            entity.Property<Guid>("Id").ValueGeneratedNever().HasColumnType("uuid");
+            entity.Property<string>("CaseId").IsRequired().HasMaxLength(32).HasColumnType("character varying(32)");
+            entity.Property<string>("AccessHash").IsRequired().HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<int>("Version").HasColumnType("integer");
+            entity.Property<string>("BoardJson").IsRequired().HasColumnType("jsonb");
+            entity.Property<DateTimeOffset>("CreatedAt").HasColumnType("timestamp with time zone");
+            entity.HasKey("Id");
+            entity.HasIndex("AccessHash").IsUnique();
+            entity.HasIndex("CaseId");
+            entity.ToTable("Investigations");
+            entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany().HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+        });
     }
 }

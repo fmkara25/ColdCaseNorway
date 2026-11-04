@@ -2,9 +2,9 @@
 
 ## Current slice
 
-Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline → interactive schematic map/route estimator. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
+Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline → interactive schematic map/route estimator → server-saved board and notes. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
 
-This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, evidence unlock rules, interviews, later map unlocks, board, notes, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
+This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, evidence unlock rules, interviews, later map unlocks, board unlock rules, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
 
 ## Local startup (PowerShell, repository root)
 
@@ -97,3 +97,12 @@ Map locations and bidirectional roads are case-scoped PostgreSQL entities, with 
 The map is deliberately schematic and not to geographic scale; road distances are authoritative. No external map service or paid provider is used. Walking and winter-driving intervals are authored design estimates, not measured historical travel times. RouteConsistencyTests validate positive/ordered estimates, graph connectivity, the opening walking window, odometer tolerance and later chronology/alibi constraints. They establish internal consistency under these assumptions, not empirical realism.
 
 Following author authorization to revise details for consistency, the previous proposed 43.4 km route was replaced by a 43.2 km model. Its critical pickup-to-transaction section permits up to 25 minutes driving plus an explicit 8-minute stop allowance inside 36 minutes, leaving 3 minutes margin. The full estimate differs from the 44 km odometer record by 0.8 km. These are authoring constraints, not additional exact event timestamps in player evidence. Later places remain unavailable until server-authorized investigation progression is implemented; the browser never receives their coordinates or names in the opening map.
+
+
+## Anonymous investigation saves
+
+Opening the board creates/resumes a case-scoped anonymous investigation. A random 256-bit capability is held only in an HttpOnly, SameSite=Strict cookie (Secure in production); only its SHA-256 hash is stored in PostgreSQL. Saves expire after 90 days server-side. Clearing browser cookies loses access; no cross-device/account recovery is claimed. Production HTTPS and backups remain deployment requirements.
+
+Board snapshots use a versioned JSONB schema and a row version checked atomically on update. A stale write returns 409 and the frontend preserves its draft. Saving is explicit; navigation away with unsaved edits is guarded. Case ownership, allowed visible references, note sizes, finite coordinates, unique connections and payload limits are checked server-side. Writes require a custom header with no cross-origin CORS policy. Anonymous session creation is rate limited. Future reverse proxies must forward trusted client addresses correctly before internet deployment.
+
+The board currently persists cards, positions, notes and player hypotheses. It does not award progression or treat a connection label as truth. Server-authorized evidence/interview unlocks remain the next gameplay stage. Player note text is rendered as plain text, never HTML. API tests cover cookie/header isolation and stale writes; PostgreSQL tests cover persistence and atomic concurrency; browser tests cover drag, connection/note persistence, session isolation and unsaved navigation.

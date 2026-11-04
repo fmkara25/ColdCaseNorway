@@ -3,7 +3,6 @@ import { Link, NavLink, Outlet, useParams } from "react-router-dom";
 import { fetchJson, isCaseFile, type CaseFile } from "./api";
 import { Feedback } from "./CasePages";
 
-const upcoming = ["TAVLE", "NOTATER"];
 export function CaseLayout() {
   const { caseId } = useParams();
   const query = useQuery({ queryKey: ["cases", caseId], queryFn: ({ signal }) => fetchJson<CaseFile>(`/api/cases/${encodeURIComponent(caseId ?? "")}`, signal, isCaseFile) });
@@ -16,7 +15,8 @@ export function CaseLayout() {
         <NavLink to="evidence" className={({ isActive }) => isActive ? "nav-active" : ""}>BEVIS</NavLink>
         <NavLink to="timeline" className={({ isActive }) => isActive ? "nav-active" : ""}>TIDSLINJE</NavLink>
         <NavLink to="map" className={({ isActive }) => isActive ? "nav-active" : ""}>KART</NavLink>
-        {upcoming.map(section => <span className="nav-unavailable" key={section}>{section}<small>Kommer senere</small></span>)}
+        <NavLink to="board" className={({ isActive }) => isActive ? "nav-active" : ""}>TAVLE</NavLink>
+        <NavLink to="notes" className={({ isActive }) => isActive ? "nav-active" : ""}>NOTATER</NavLink>
       </nav><Link className="back-link" to="/">← Saksarkiv</Link>
     </aside>
     <main className="workspace"><header className="workspace-header"><span>SAK / {caseId}</span><span className="status">Uoppklart</span></header>

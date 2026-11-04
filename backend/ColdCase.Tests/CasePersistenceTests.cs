@@ -1,4 +1,7 @@
 using ColdCase.Infrastructure.Persistence;
+using ColdCase.Domain.Investigations;
+using ColdCase.Application.Investigations;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 
 namespace ColdCase.Tests;
@@ -45,6 +48,18 @@ public sealed class CasePersistenceTests
         Assert.Equal(3, map.Locations.Count); Assert.Equal(2, map.Roads.Count);
         var emptyMap = await new MapRepository(database).ReadAsync("another-case", CancellationToken.None);
         Assert.Empty(emptyMap.Locations); Assert.Empty(emptyMap.Roads);
+        var investigations = new InvestigationRepository(database);
+        var access = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N");
+        var saved = new Investigation { Id = Guid.NewGuid(), CaseId = "1999-1218", AccessHash = access,
+            CreatedAt = DateTimeOffset.UtcNow, BoardJson = JsonSerializer.Serialize(BoardState.Empty) };
+        await investigations.CreateAsync(saved, CancellationToken.None);
+        Assert.Null(await investigations.ReadAsync("other-case", access, CancellationToken.None));
+        Assert.Null(await investigations.ReadAsync("1999-1218", "wrong-token", CancellationToken.None));
+        var boardJson = JsonSerializer.Serialize(new BoardState(1, [new("n", "Persisted note")], [new("note:n", 20, 30)], []));
+        Assert.True(await investigations.SaveBoardAsync(saved.Id, saved.CaseId, access, 0, boardJson, CancellationToken.None));
+        Assert.False(await investigations.SaveBoardAsync(saved.Id, saved.CaseId, access, 0, boardJson, CancellationToken.None));
+        var restored = await investigations.ReadAsync(saved.CaseId, access, CancellationToken.None);
+        Assert.NotNull(restored); Assert.Equal(1, restored.Version); Assert.Contains("Persisted note", restored.BoardJson);
         Assert.Null(await repository.FindAsync("missing-case", CancellationToken.None));
     }
 }
