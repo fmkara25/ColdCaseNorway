@@ -161,6 +161,35 @@ public sealed class CaseApiTests
         Assert.Equal(HttpStatusCode.BadRequest, hidden.StatusCode);
     }
 
+    [Fact]
+    public async Task LockedActionsAndEvidenceCannotBeGuessedAndProgressDoesNotLeakRules()
+    {
+        using var factory = new ApiFactory(false);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        client.DefaultRequestHeaders.Add("X-ColdCase-Request", "1");
+        const string endpoint = "/api/cases/1999-1218/investigation";
+        using var opened = await client.PostAsync(endpoint, null);
+        opened.EnsureSuccessStatusCode();
+        using var progress = await client.GetAsync(endpoint + "/progress");
+        var body = await progress.Content.ReadAsStringAsync();
+        Assert.DoesNotContain("lars", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("requiredFlags", body); Assert.DoesNotContain("grants", body);
+        using var locked = await client.PostAsJsonAsync(endpoint + "/actions/lars-events", new { locationIds = (string[]?)null });
+        Assert.Equal(HttpStatusCode.NotFound, locked.StatusCode);
+        using var hidden = await client.PostAsync(endpoint + "/evidence/lars-account/review", null);
+        Assert.Equal(HttpStatusCode.NotFound, hidden.StatusCode);
+        using var reviewed = await client.PostAsync(endpoint + "/evidence/bus-ticket/review", null);
+        reviewed.EnsureSuccessStatusCode();
+        Assert.Contains("bus-ticket", await reviewed.Content.ReadAsStringAsync());
+        using var repeated = await client.PostAsync(endpoint + "/evidence/bus-ticket/review", null);
+        using var firstJson = JsonDocument.Parse(await reviewed.Content.ReadAsStringAsync());
+        using var secondJson = JsonDocument.Parse(await repeated.Content.ReadAsStringAsync());
+        Assert.Equal(firstJson.RootElement.GetProperty("version").GetInt32(), secondJson.RootElement.GetProperty("version").GetInt32());
+        using var other = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        using var privateProgress = await other.GetAsync(endpoint + "/progress");
+        Assert.Equal(HttpStatusCode.Unauthorized, privateProgress.StatusCode);
+    }
+
     private sealed class StubInvestigationRepository : IInvestigationRepository
     {
         private readonly Dictionary<Guid, Investigation> rows = [];
@@ -168,11 +197,34 @@ public sealed class CaseApiTests
             Task.FromResult(rows.Values.SingleOrDefault(x => x.CaseId == caseId && x.AccessHash == accessHash));
         public Task CreateAsync(Investigation investigation, CancellationToken cancellationToken)
         { rows.Add(investigation.Id, investigation); return Task.CompletedTask; }
+        public Task<bool> SaveProgressAsync(Guid id, string caseId, string accessHash, int expectedVersion, string progressJson, CancellationToken cancellationToken)
+        {
+            if (!rows.TryGetValue(id, out var row) || row.CaseId != caseId || row.AccessHash != accessHash || row.Version != expectedVersion) return Task.FromResult(false);
+            row.ProgressJson = progressJson; row.Version++;
+            return Task.FromResult(true);
+        }
         public Task<bool> SaveBoardAsync(Guid id, string caseId, string accessHash, int expectedVersion, string boardJson, CancellationToken cancellationToken)
         {
             if (!rows.TryGetValue(id, out var row) || row.CaseId != caseId || row.AccessHash != accessHash || row.Version != expectedVersion) return Task.FromResult(false);
             row.BoardJson = boardJson; row.Version++;
             return Task.FromResult(true);
+        }
+    }
+
+    private sealed class StubGameplayRepository : IGameplayRepository
+    {
+        public Task<IReadOnlyList<CaseAction>> ActionsAsync(string caseId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<CaseAction>>(Case01GameplaySeed.CreateActions());
+        public async Task<GameMaterials> MaterialsAsync(string caseId, IReadOnlySet<string> flags, CancellationToken cancellationToken)
+        {
+            var repository = new StubRepository(false);
+            var people = await repository.ListPeopleAsync(caseId, cancellationToken);
+            var evidence = await repository.ListEvidenceAsync(caseId, cancellationToken);
+            var timeline = await repository.ListTimelineAsync(caseId, cancellationToken);
+            return new(people.Where(x => x.IsInitiallyVisible || flags.Contains("person:" + x.Id)).ToArray(),
+                evidence.Concat(Case01GameplaySeed.CreateEvidence()).Where(x => x.IsInitiallyVisible || flags.Contains("evidence:" + x.Id)).ToArray(),
+                timeline.Where(x => x.IsInitiallyVisible || flags.Contains("timeline:" + x.Id)).ToArray(),
+                Case01MapSeed.CreateGraph().OpeningOnly(caseId));
         }
     }
 
@@ -190,6 +242,8 @@ public sealed class CaseApiTests
             builder.UseSetting("ConnectionStrings:ColdCase", "Host=localhost;Database=unused;Username=unused");
             builder.ConfigureServices(services =>
             {
+                services.RemoveAll<IGameplayRepository>();
+                services.AddSingleton<IGameplayRepository>(new StubGameplayRepository());
                 services.RemoveAll<IInvestigationRepository>();
                 services.AddSingleton<IInvestigationRepository>(new StubInvestigationRepository());
                 services.RemoveAll<IMapRepository>();

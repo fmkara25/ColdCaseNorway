@@ -9,10 +9,10 @@ import { canConnect, openInvestigation, removeCard, saveBoard, type BoardSnapsho
 
 export function BoardPage({ notesOnly = false }: { notesOnly?: boolean }) {
   const { caseId = "" } = useParams();
-  const query = useQuery({ queryKey: ["investigation", caseId], queryFn: () => openInvestigation(caseId), refetchOnWindowFocus: false });
+  const query = useQuery({ queryKey: ["investigation", caseId], queryFn: () => openInvestigation(caseId), refetchOnWindowFocus: false, staleTime: 0, refetchOnMount: "always" });
   const people = useQuery({ queryKey: ["cases", caseId, "people"], queryFn: ({ signal }) => fetchJson<Person[]>(`/api/cases/${encodeURIComponent(caseId)}/people`, signal, isPeople) });
   const evidence = useQuery({ queryKey: ["cases", caseId, "evidence"], queryFn: ({ signal }) => fetchJson<Evidence[]>(`/api/cases/${encodeURIComponent(caseId)}/evidence`, signal, isEvidenceList) });
-  if (!query.data || !people.data || !evidence.data) {
+  if (!query.data || query.isFetching || !people.data || !evidence.data) {
     return <Feedback error={query.error ?? people.error ?? evidence.error} retry={() => { void query.refetch(); void people.refetch(); void evidence.refetch(); }} />;
   }
   return <BoardEditor key={caseId} caseId={caseId} initial={query.data} people={people.data} evidence={evidence.data} notesOnly={notesOnly} reload={async () => {
@@ -47,7 +47,7 @@ function BoardEditor({ caseId, initial, people, evidence, notesOnly, reload }: {
   const [pan, setPan] = useState({ x: 20, y: 20 });
   const drag = useRef<{ id?: string; x: number; y: number; startX: number; startY: number } | null>(null);
   const mutation = useMutation({ mutationFn: (snapshot: BoardSnapshot) => saveBoard(caseId, snapshot), onSuccess: snapshot => {
-    setDraft(snapshot); setDirty(false); client.setQueryData(["investigation", caseId], snapshot);
+    setDraft(snapshot); setDirty(false); client.setQueryData(["investigation", caseId], snapshot); void client.invalidateQueries({ queryKey: ["progress", caseId] });
   } });
   const board = draft.board;
   const busy = mutation.isPending;

@@ -13,6 +13,10 @@ public sealed class InvestigationRepository(CaseDbContext database) : IInvestiga
         database.Investigations.Add(investigation);
         await database.SaveChangesAsync(cancellationToken);
     }
+    public async Task<bool> SaveProgressAsync(Guid id, string caseId, string accessHash, int expectedVersion, string progressJson, CancellationToken cancellationToken) =>
+        await database.Investigations.Where(x => x.Id == id && x.CaseId == caseId && x.AccessHash == accessHash && x.Version == expectedVersion)
+            .ExecuteUpdateAsync(update => update.SetProperty(x => x.ProgressJson, progressJson).SetProperty(x => x.Version, x => x.Version + 1), cancellationToken) == 1;
+
     public async Task<bool> SaveBoardAsync(Guid id, string caseId, string accessHash, int expectedVersion, string boardJson, CancellationToken cancellationToken) =>
         await database.Investigations.Where(x => x.Id == id && x.CaseId == caseId && x.AccessHash == accessHash && x.Version == expectedVersion)
             .ExecuteUpdateAsync(update => update.SetProperty(x => x.BoardJson, boardJson).SetProperty(x => x.Version, x => x.Version + 1), cancellationToken) == 1;

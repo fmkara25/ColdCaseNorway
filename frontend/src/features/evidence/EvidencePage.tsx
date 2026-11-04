@@ -1,16 +1,21 @@
 import { useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { fetchJson } from "../cases/api";
 import { Feedback } from "../cases/CasePages";
-import { useReviewStore } from "../investigation/reviewStore";
+import { progressCommand, useProgress } from "../investigation/progress";
 import { isEvidenceList, type Evidence } from "./api";
 
 export function EvidencePage() {
   const { caseId = "", evidenceId } = useParams();
   const query = useQuery({ queryKey: ["cases", caseId, "evidence"], queryFn: ({ signal }) => fetchJson<Evidence[]>(`/api/cases/${encodeURIComponent(caseId)}/evidence`, signal, isEvidenceList) });
-  const reviewed = useReviewStore(state => state.reviewed[caseId]);
-  const markReviewed = useReviewStore(state => state.markReviewed);
+  const progress = useProgress(caseId);
+  const reviewed = progress.data?.reviewedEvidenceIds;
+  const client = useQueryClient();
+  const review = useMutation({ mutationFn: (id: string) => progressCommand(caseId, `evidence/${encodeURIComponent(id)}/review`), onSuccess: async value => {
+    client.setQueryData(["progress", caseId], value);
+    await client.invalidateQueries({ queryKey: ["investigation", caseId] });
+  } });
   const dialog = useRef<HTMLDialogElement>(null);
   const [zoom, setZoom] = useState(100);
   if (query.isPending || query.isError) return <Feedback error={query.error} retry={() => { void query.refetch(); }} />;
@@ -25,7 +30,8 @@ export function EvidencePage() {
     </section><section aria-label="Dokumentvisning">
       {selected ? <>
         <div className="document-toolbar"><button onClick={() => { setZoom(100); dialog.current?.showModal(); }}>Forstørr dokument</button>
-          <button disabled={reviewed?.includes(selected.id)} onClick={() => markReviewed(caseId, selected.id)}>{reviewed?.includes(selected.id) ? "Gjennomgått" : "Marker som gjennomgått"}</button></div>
+          <button disabled={progress.isPending || review.isPending || reviewed?.includes(selected.id)} onClick={() => review.mutate(selected.id)}>{reviewed?.includes(selected.id) ? "Gjennomgått" : "Marker som gjennomgått"}</button></div>
+        {(progress.isError || review.isError) && <div role="alert"><p>{review.error?.message ?? "Kunne ikke åpne lagringen for etterforskningen."}</p><button onClick={() => { review.reset(); void progress.refetch(); }}>Prøv igjen</button></div>}
         <Document evidence={selected} />
         <dialog ref={dialog} className="document-dialog" aria-label="Forstørret dokument">
           <div className="document-toolbar"><button onClick={() => setZoom(value => Math.max(80, value - 20))} disabled={zoom <= 80} aria-label="Mindre tekst">A−</button><span>{zoom} %</span><button onClick={() => setZoom(value => Math.min(180, value + 20))} disabled={zoom >= 180} aria-label="Større tekst">A+</button><button onClick={() => dialog.current?.close()}>Lukk</button></div>
@@ -33,6 +39,7 @@ export function EvidencePage() {
         </dialog>
       </> : <div className="person-detail"><h2>{evidenceId ? "Dokumentet er ikke tilgjengelig i denne saken." : "Velg et dokument"}</h2><p>Kildene åpnes her. Du kan forstørre teksten og markere hva du har gjennomgått.</p></div>}
     </section></div>
+    <p className="map-caption"><Link to={`/cases/${encodeURIComponent(caseId)}`}>Se tilgjengelige undersøkelser</Link> eller knytt kildene sammen på tavlen.</p>
   </>;
 }
 function Document({ evidence }: { evidence: Evidence }) {

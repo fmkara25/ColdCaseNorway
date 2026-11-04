@@ -1,3 +1,4 @@
+import { ActionPanel } from "../investigation/ActionPanel";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useOutletContext } from "react-router-dom";
 import { ApiError, isCaseList, fetchJson, formatDate, type CaseFile, type CaseSummary } from "./api";
@@ -33,5 +34,6 @@ export function CaseOverview() {
         <div className="overview-heading"><p className="eyebrow">GJENÅPNET ETTERFORSKNING</p><h1>{file.title}</h1><p>{file.location} · {formatDate(file.disappearanceDate)}</p></div>
         <div className="overview-grid"><article className="report"><div className="report-meta"><span>ARKIVUTDRAG</span><span>{file.id}</span></div><h2>Den første vurderingen</h2><p>{file.initialReport}</p><hr/><p className="report-note">Dette er utgangspunktet for etterforskningen. Opplysningene må vurderes opp mot de øvrige kildene i saken.</p></article>
         <section className="person-summary"><p className="eyebrow">SAVNET PERSON</p><div className="monogram" aria-hidden="true">{file.missingPerson.split(" ").map(part => part[0]).join("")}</div><h2>{file.missingPerson}</h2><p>{file.age} år ved forsvinningen</p><hr/><p className="eyebrow">UTGANGSPUNKT</p><p>Hva skjedde den kvelden?</p></section></div>
+        <ActionPanel />
   </>;
 }

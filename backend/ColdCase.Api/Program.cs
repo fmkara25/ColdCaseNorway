@@ -29,6 +29,9 @@ builder.Services.AddDbContext<CaseDbContext>(options => options.UseNpgsql(
 builder.Services.AddScoped<ICaseRepository, CaseRepository>();
 builder.Services.AddScoped<IMapRepository, MapRepository>();
 builder.Services.AddScoped<IInvestigationRepository, InvestigationRepository>();
+builder.Services.AddScoped<IGameplayRepository, GameplayRepository>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<GameplayView>();
 
 var app = builder.Build();
 app.UseExceptionHandler(handler => handler.Run(async context =>
@@ -61,33 +64,34 @@ app.MapGet("/api/cases/{id}", async (string id, ICaseRepository cases, Cancellat
         ? (IResult)Results.Problem(statusCode: 404, title: "Saken finnes ikke.")
         : Results.Ok(CaseOverviewResponse.From(file));
 });
-app.MapGet("/api/cases/{id}/people", async (string id, ICaseRepository cases, CancellationToken cancellationToken) =>
+app.MapGet("/api/cases/{id}/people", async (string id, ICaseRepository cases, GameplayView game, CancellationToken cancellationToken) =>
 {
     if (await cases.FindAsync(id, cancellationToken) is null)
         return (IResult)Results.Problem(statusCode: 404, title: "Saken finnes ikke.");
-    var people = await cases.ListPeopleAsync(id, cancellationToken);
-    return Results.Ok(people.Where(x => x.IsInitiallyVisible).Select(x => new
+    var people = (await game.MaterialsAsync(id, cancellationToken)).People;
+    return Results.Ok(people.Select(x => new
         { x.Id, x.Name, x.Age, x.Role, x.Introduction }));
 });
-app.MapGet("/api/cases/{id}/evidence", async (string id, ICaseRepository cases, CancellationToken cancellationToken) =>
+app.MapGet("/api/cases/{id}/evidence", async (string id, ICaseRepository cases, GameplayView game, CancellationToken cancellationToken) =>
 {
     if (await cases.FindAsync(id, cancellationToken) is null)
         return (IResult)Results.Problem(statusCode: 404, title: "Saken finnes ikke.");
-    var evidence = await cases.ListEvidenceAsync(id, cancellationToken);
-    return Results.Ok(evidence.Where(x => x.IsInitiallyVisible).Select(x => new
+    var evidence = (await game.MaterialsAsync(id, cancellationToken)).Evidence;
+    return Results.Ok(evidence.Select(x => new
         { x.Id, x.Title, x.Kind, x.Source, x.Body }));
 });
-app.MapGet("/api/cases/{id}/timeline", async (string id, ICaseRepository cases, CancellationToken cancellationToken) =>
+app.MapGet("/api/cases/{id}/timeline", async (string id, ICaseRepository cases, GameplayView game, CancellationToken cancellationToken) =>
 {
     if (await cases.FindAsync(id, cancellationToken) is null)
         return (IResult)Results.Problem(statusCode: 404, title: "Saken finnes ikke.");
-    var events = await cases.ListTimelineAsync(id, cancellationToken);
-    return Results.Ok(events.Where(x => x.IsInitiallyVisible).Select(x => new
+    var events = (await game.MaterialsAsync(id, cancellationToken)).Timeline;
+    return Results.Ok(events.Select(x => new
         { x.Id, x.Title, x.Description, x.SourceEvidenceId, x.MinuteOfDay, x.IsEstimate, x.IsPlanned }));
 });
 app.UseRateLimiter();
 app.MapCaseMapEndpoints();
 app.MapInvestigationEndpoints();
+app.MapGameplayEndpoints();
 app.Run();
 
 public partial class Program { }
