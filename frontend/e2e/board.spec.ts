@@ -123,7 +123,9 @@ test("failed refresh preserves a conflicted note draft until an explicit success
   await expect(page.getByRole("alert")).toContainText("Utkastet ditt er beholdt");
   await expect(page.getByLabel(/^Rediger notat/)).toHaveValue("Mitt lokale utkast");
   await page.unroute("**/investigation");
+  const resumed = page.waitForResponse(response => response.url().endsWith(session) && response.request().method() === "POST");
   await page.getByRole("button", { name:"Hent lagret versjon", exact:true }).click();
+  expect((await resumed).status()).toBe(200);
   await expect(page.getByLabel(/^Rediger notat/)).toHaveValue("Endret i annen fane");
   await expect(page.getByRole("status").filter({ hasText:/^Lagret$/ })).toBeVisible();
 });

@@ -8,6 +8,7 @@ using System.Text.Json;
 using ColdCase.Application.Cases;
 using ColdCase.Domain.Cases;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -294,11 +295,29 @@ public sealed class CaseApiTests
             Task.FromResult(Case01MapSeed.CreateGraph());
     }
 
-    private sealed class ApiFactory(bool fail) : WebApplicationFactory<Program>
+    [Fact]
+    public async Task BrowserAcceptanceFlagCannotRelaxProductionRateLimit()
+    {
+        using var factory = new ApiFactory(false, browserAcceptance: true);
+        Assert.True(factory.Services.GetRequiredService<IConfiguration>().GetValue<bool>("Testing:BrowserAcceptance"));
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        client.DefaultRequestHeaders.Add("X-ColdCase-Request", "1");
+        for (var i = 0; i < 30; i++)
+        {
+            using var response = await client.PostAsync("/api/cases/1999-1218/investigation", null);
+            response.EnsureSuccessStatusCode();
+        }
+        using var limited = await client.PostAsync("/api/cases/1999-1218/investigation", null);
+        Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+        Assert.Contains("For mange forespørsler", await limited.Content.ReadAsStringAsync());
+    }
+
+    private sealed class ApiFactory(bool fail, bool browserAcceptance = false) : WebApplicationFactory<Program>
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Production");
+            builder.UseSetting("Testing:BrowserAcceptance", browserAcceptance.ToString());
             builder.UseSetting("ConnectionStrings:ColdCase", "Host=localhost;Database=unused;Username=unused");
             builder.ConfigureServices(services =>
             {

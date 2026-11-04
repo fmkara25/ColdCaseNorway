@@ -11,11 +11,15 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 128 * 1024);
+// Only isolated Development browser acceptance opts into a larger synthetic-test budget.
+// Production retains its per-IP protection even if the test flag is accidentally supplied.
+var investigationPermitLimit = builder.Environment.IsDevelopment() &&
+    builder.Configuration.GetValue<bool>("Testing:BrowserAcceptance") ? 1000 : 30;
 builder.Services.AddRateLimiter(options =>
 {
     options.AddPolicy("investigation-start", context => RateLimitPartition.GetFixedWindowLimiter(
         context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
-        { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+        { PermitLimit = investigationPermitLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     options.OnRejected = async (context, cancellationToken) =>
     {
         await Results.Problem(statusCode: 429, title: "For mange forespørsler. Vent litt og prøv igjen.").ExecuteAsync(context.HttpContext);
