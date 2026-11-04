@@ -80,6 +80,7 @@ public sealed class CaseDbContext(DbContextOptions<CaseDbContext> options) : DbC
         evidence.Property(x => x.Source).HasMaxLength(200).IsRequired();
         evidence.HasOne<CaseFile>().WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
         var person = modelBuilder.Entity<Person>();
+        person.Property(x => x.PortraitImagePath).HasMaxLength(512);
         person.HasKey(x => new { x.CaseId, x.Id });
         person.Property(x => x.CaseId).HasMaxLength(32);
         person.Property(x => x.Id).HasMaxLength(64);
@@ -87,6 +88,8 @@ public sealed class CaseDbContext(DbContextOptions<CaseDbContext> options) : DbC
         person.Property(x => x.Role).HasMaxLength(200).IsRequired();
         person.HasOne<CaseFile>().WithMany().HasForeignKey(x => x.CaseId).OnDelete(DeleteBehavior.Restrict);
         var entity = modelBuilder.Entity<CaseFile>();
+        entity.Property(x => x.CoverImagePath).HasMaxLength(512);
+        entity.Property(x => x.MissingPersonPortraitPath).HasMaxLength(512);
         entity.HasKey(x => x.Id);
         entity.Property(x => x.Id).HasMaxLength(32);
         entity.Property(x => x.Title).HasMaxLength(200).IsRequired();

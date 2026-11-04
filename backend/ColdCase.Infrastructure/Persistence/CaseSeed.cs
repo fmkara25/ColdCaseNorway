@@ -43,5 +43,11 @@ public static class CaseSeed
         await Case01MapSeed.InitializeAsync(database);
         await Case01GameplaySeed.InitializeAsync(database);
         await Case01ReconstructionSeed.InitializeAsync(database);
+        var archive = await database.Cases.SingleAsync(x => x.Id == "1999-1218");
+        archive.CoverImagePath = "/images/skardal-winter.webp";
+        archive.MissingPersonPortraitPath = "/images/ingrid-1999.webp";
+        var missingPerson = await database.People.SingleAsync(x => x.CaseId == "1999-1218" && x.Id == "ingrid");
+        missingPerson.PortraitImagePath = archive.MissingPersonPortraitPath;
+        await database.SaveChangesAsync();
     }
 }

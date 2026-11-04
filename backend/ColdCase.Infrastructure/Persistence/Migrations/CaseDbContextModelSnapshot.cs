@@ -13,6 +13,8 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
             .HasAnnotation("Npgsql:ValueGenerationStrategy", Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
         modelBuilder.Entity("ColdCase.Domain.Cases.CaseFile", entity =>
         {
+            entity.Property<string>("CoverImagePath").HasMaxLength(512).HasColumnType("character varying(512)");
+            entity.Property<string>("MissingPersonPortraitPath").HasMaxLength(512).HasColumnType("character varying(512)");
             entity.Property<string>("Id").HasMaxLength(32).HasColumnType("character varying(32)");
             entity.Property<int>("Age").HasColumnType("integer");
             entity.Property<DateOnly>("DisappearanceDate").HasColumnType("date");
@@ -26,6 +28,7 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
         });
         modelBuilder.Entity("ColdCase.Domain.Cases.Person", entity =>
         {
+            entity.Property<string>("PortraitImagePath").HasMaxLength(512).HasColumnType("character varying(512)");
             entity.Property<string>("CaseId").HasMaxLength(32).HasColumnType("character varying(32)");
             entity.Property<string>("Id").HasMaxLength(64).HasColumnType("character varying(64)");
             entity.Property<int>("Age").HasColumnType("integer");

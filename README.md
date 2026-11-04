@@ -57,4 +57,4 @@ The frontend uses a feature-based architecture.
 
 ## Status
 
-The Case 01 core loop includes archive/overview, people, evidence, timeline, route analysis, a saved board/notes, gated research/interviews and final reconstruction. Automated API/PostgreSQL/browser checks cover the case-to-epilogue flow. See [development setup and validation](docs/DEVELOPMENT.md). Human playtime, visuals/audio, deployment hardening and Azure deployment are still pending.
+The Case 01 core loop includes archive/overview, people, evidence, timeline, route analysis, a saved board/notes, gated research/interviews and final reconstruction. Automated API/PostgreSQL/browser checks cover the case-to-epilogue flow. See [development setup and validation](docs/DEVELOPMENT.md). Bundled fictional archive illustrations and optional procedural ambient/paper sound are included; see [asset provenance](docs/ASSETS.md). Human playtime, listening/visual acceptance, deployment hardening and Azure deployment are still pending.

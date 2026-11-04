@@ -1,3 +1,4 @@
+import { ArchiveImage } from "../../components/ArchiveImage";
 import { ActionPanel } from "../investigation/ActionPanel";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useOutletContext } from "react-router-dom";
@@ -18,7 +19,7 @@ export function CaseArchive() {
     {query.isPending || query.isError ? <Feedback error={query.error} retry={() => { void query.refetch(); }} /> :
       query.data.length === 0 ? <p>Ingen saker er tilgjengelige.</p> : <div className="case-list">{query.data.map(file =>
       <article className="case-card" key={file.id}>
-        <div className="archive-label" aria-hidden="true"><span>SAKSARKIV</span><strong>{file.id}</strong><span>{formatDate(file.disappearanceDate)}</span></div>
+        <div className="archive-cover"><ArchiveImage src={file.coverImagePath} name={file.location} landscape /><span>SAK {file.id}</span></div>
         <div className="case-content"><div className="case-meta"><span>SAK {file.id}</span><span className="status">Uoppklart</span></div>
           <h2>{file.title}</h2><p>{file.summary}</p><dl><div><dt>Savnet</dt><dd>{file.missingPerson}, {file.age} år</dd></div><div><dt>Sted</dt><dd>{file.location}</dd></div><div><dt>Dato</dt><dd>{formatDate(file.disappearanceDate)}</dd></div></dl>
           <Link className="primary-button" to={`/cases/${encodeURIComponent(file.id)}`}>Åpne sak <span aria-hidden="true">↗</span></Link>
@@ -33,7 +34,7 @@ export function CaseOverview() {
   return <>
         <div className="overview-heading"><p className="eyebrow">GJENÅPNET ETTERFORSKNING</p><h1>{file.title}</h1><p>{file.location} · {formatDate(file.disappearanceDate)}</p></div>
         <div className="overview-grid"><article className="report"><div className="report-meta"><span>ARKIVUTDRAG</span><span>{file.id}</span></div><h2>Den første vurderingen</h2><p>{file.initialReport}</p><hr/><p className="report-note">Dette er utgangspunktet for etterforskningen. Opplysningene må vurderes opp mot de øvrige kildene i saken.</p></article>
-        <section className="person-summary"><p className="eyebrow">SAVNET PERSON</p><div className="monogram" aria-hidden="true">{file.missingPerson.split(" ").map(part => part[0]).join("")}</div><h2>{file.missingPerson}</h2><p>{file.age} år ved forsvinningen</p><hr/><p className="eyebrow">UTGANGSPUNKT</p><p>Hva skjedde den kvelden?</p></section></div>
+        <section className="person-summary"><p className="eyebrow">SAVNET PERSON</p><ArchiveImage src={file.missingPersonPortraitPath} name={file.missingPerson} /><h2>{file.missingPerson}</h2><p>{file.age} år ved forsvinningen</p><hr/><p className="eyebrow">UTGANGSPUNKT</p><p>Hva skjedde den kvelden?</p></section></div>
         <ActionPanel />
   </>;
 }

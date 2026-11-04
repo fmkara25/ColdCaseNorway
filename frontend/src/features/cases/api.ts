@@ -1,3 +1,4 @@
+import { isArchiveImagePath } from "../../components/imagePath";
 export interface CaseSummary {
   id: string;
   title: string;
@@ -6,6 +7,8 @@ export interface CaseSummary {
   missingPerson: string;
   age: number;
   summary: string;
+  coverImagePath?: string | null;
+  missingPersonPortraitPath?: string | null;
 }
 
 export interface CaseFile extends CaseSummary {
@@ -42,6 +45,7 @@ export function isCaseSummary(value: unknown): value is CaseSummary {
   if (!isRecord(value)) return false;
   const strings = ["id", "title", "location", "missingPerson", "summary"];
   if (!strings.every(key => typeof value[key] === "string" && value[key].length > 0)) return false;
+  if (!isArchiveImagePath(value.coverImagePath) || !isArchiveImagePath(value.missingPersonPortraitPath)) return false;
   if (!Number.isInteger(value.age) || (value.age as number) < 0) return false;
   if (typeof value.disappearanceDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value.disappearanceDate)) return false;
   const date = new Date(value.disappearanceDate + "T00:00:00Z");
