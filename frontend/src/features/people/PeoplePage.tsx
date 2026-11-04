@@ -47,12 +47,16 @@ function InterviewStage({ caseId, person }: { caseId:string; person:Person }) {
   const [questionPage, setQuestionPage] = useState(0);
   const [newSources, setNewSources] = useState<Evidence[]>([]);
   const log = useRef<HTMLDialogElement>(null);
+  const sourcePicker = useRef<HTMLDialogElement>(null);
+  const [sourcePage, setSourcePage] = useState(0);
   const responseHeading = useRef<HTMLHeadingElement>(null);
   const history = progress.data?.history.filter(entry => entry.personId === person.id) ?? [];
   const activeReply = history.find(entry => entry.id === replyId) ?? history.at(-1);
   const pages = replyPages(activeReply?.response ?? person.introduction);
   const currentReplyPage = Math.min(replyPage, pages.length - 1);
   const actions = progress.data?.actions.filter(action => action.personId === person.id) ?? [];
+  const sourcePages = Math.max(1, Math.ceil((evidence.data?.length ?? 0) / 4));
+  const currentSourcePage = Math.min(sourcePage, sourcePages - 1);
   const questions = Math.min(questionPage, Math.max(0, Math.ceil(actions.length / 3) - 1));
   useEffect(() => { if (replyId || topic?.action.id) responseHeading.current?.focus(); }, [replyId, topic?.action.id]);
   const mutation = useMutation({ mutationFn: ({ action, approachId, version }: { action:CaseAction; approachId?:string; version:number }) =>
@@ -75,7 +79,7 @@ function InterviewStage({ caseId, person }: { caseId:string; person:Person }) {
   return <section className="people-stage interview-stage" aria-label="Samtale og personopplysninger">
     <header className="people-stage-heading"><div><p className="eyebrow">FORKLARINGENE MÅ PRØVES MOT KILDENE</p><h1>{person.name}</h1></div><Link className="quiet-game-link" to="../people">← Personer</Link></header>
     <div className="interview-scene"><section className="interview-portrait"><span className="paper-clip" aria-hidden="true"/><ArchiveImage src={person.portraitImagePath} name={person.name}/><strong className="interview-person-name">{person.name}</strong><p>{person.role}</p><small>{person.age} år i 1999</small></section>
-      <section className="interview-conversation" aria-label="Gjeldende forklaring"><header><span className="eyebrow">{topic ? "SPØRSMÅLET DU VIL STILLE" : activeReply ? "REGISTRERT FORKLARING" : "ARKIVOPPLYSNINGER"}</span><button disabled={!history.length} onClick={() => log.current?.showModal()}>Tidligere samtaler</button></header>
+      <section className="interview-conversation" aria-label="Gjeldende forklaring"><header><span className="eyebrow">{topic ? "SPØRSMÅLET DU VIL STILLE" : activeReply ? "REGISTRERT FORKLARING" : "ARKIVOPPLYSNINGER"}</span><div className="interview-record-tools"><button disabled={!history.length} onClick={() => log.current?.showModal()}>Tidligere samtaler</button><button disabled={!history.length || !evidence.isSuccess || mutation.isPending || !!topic} onClick={() => { setSourcePage(0); sourcePicker.current?.showModal(); }}>Prøv mot en kilde</button></div></header>
         <div className="action-history" aria-live="polite"><h2 ref={responseHeading} tabIndex={-1}>{topic?.action.label ?? activeReply?.label ?? "Utgangspunktet"}</h2>
           {!topic && activeReply?.approach && <p className="approach-receipt">Din tilnærming: {activeReply.approach.label}</p>}
           {topic ? <p className="interview-topic-context">Ta utgangspunkt i kildene du har undersøkt. Velg hvordan du vil stille spørsmålet nedenfor.</p> : <blockquote>{pages[currentReplyPage]}</blockquote>}
@@ -94,6 +98,7 @@ function InterviewStage({ caseId, person }: { caseId:string; person:Person }) {
       {mutation.isPending && <p className="interview-operation" role="status">Registrerer spørsmålet …</p>}
       {mutation.isError && <div className="interview-operation" role="alert"><p>{mutation.error.message}</p><button onClick={() => { void refresh(); }}>Oppdater samtalen</button></div>}
     </section>
+    <dialog className="desk-dialog interview-source-picker" ref={sourcePicker} aria-label="Prøv forklaringen mot en kilde"><header className="desk-dialog-header"><span>DIN UNDERSØKELSE</span><button onClick={() => sourcePicker.current?.close()}>Tilbake til samtalen</button></header><section className="desk-dialog-content"><p className="eyebrow">FORKLARING OG KILDE</p><h2>Hva vil du sammenholde?</h2><p>Velg en kilde du har tilgang til. Sammenligningen viser personopplysningene og svarene som er registrert i denne etterforskningen. Det er du som må vurdere samsvar og motsetninger.</p><div className="interview-comparison-cards">{evidence.data?.slice(currentSourcePage * 4, currentSourcePage * 4 + 4).map(item => <Link key={item.id} to={`${root}/evidence/${encodeURIComponent(item.id)}?compare=1&with=${encodeURIComponent(`person:${person.id}`)}`} aria-label={`Sammenlign med ${item.title}`}><span aria-hidden="true">▤</span><strong>{item.title}</strong><small>{item.kind} · Åpne sammenligningen ↗</small></Link>)}</div><div className="interview-source-pagination"><button aria-label="Forrige samtalekilder" disabled={!currentSourcePage} onClick={() => setSourcePage(currentSourcePage - 1)}>←</button><span>{currentSourcePage + 1} / {sourcePages}</span><button aria-label="Neste samtalekilder" disabled={currentSourcePage >= sourcePages - 1} onClick={() => setSourcePage(currentSourcePage + 1)}>→</button></div></section></dialog>
     <dialog className="desk-dialog interview-log" ref={log} aria-label="Tidligere samtaler"><header className="desk-dialog-header"><span>SAMTALEHISTORIKK</span><button onClick={() => log.current?.close()}>Tilbake til samtalen</button></header><section className="desk-dialog-content conversation-log">{history.map(entry => <article key={entry.id}><h2>{entry.label}</h2>{entry.approach && <p>Din tilnærming: {entry.approach.label}</p>}<p>{entry.response}</p></article>)}</section></dialog>
   </section>;
 }
