@@ -53,5 +53,22 @@ public sealed class CaseDbContextModelSnapshot : ModelSnapshot
             entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany()
                 .HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
         });
+        modelBuilder.Entity("ColdCase.Domain.Cases.TimelineEvent", entity =>
+        {
+            entity.Property<string>("CaseId").HasMaxLength(32).HasColumnType("character varying(32)");
+            entity.Property<string>("Id").HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<string>("Title").IsRequired().HasMaxLength(200).HasColumnType("character varying(200)");
+            entity.Property<string>("Description").IsRequired().HasColumnType("text");
+            entity.Property<string>("SourceEvidenceId").HasMaxLength(64).HasColumnType("character varying(64)");
+            entity.Property<int?>("MinuteOfDay").HasColumnType("integer");
+            entity.Property<int>("DisplayOrder").HasColumnType("integer");
+            entity.Property<bool>("IsEstimate").HasColumnType("boolean");
+            entity.Property<bool>("IsPlanned").HasColumnType("boolean");
+            entity.Property<bool>("IsInitiallyVisible").HasColumnType("boolean");
+            entity.HasKey("CaseId", "Id");
+            entity.ToTable("TimelineEvents");
+            entity.HasOne("ColdCase.Domain.Cases.CaseFile", null).WithMany()
+                .HasForeignKey("CaseId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+        });
     }
 }
