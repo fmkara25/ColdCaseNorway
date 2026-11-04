@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("case branches progress through reviewed evidence, saved links and verified claims without leaking to another browser", async ({ page, browser }) => {
+test("case branches progress through reviewed evidence, saved links and verified claims without leaking to another browser", async ({ page, browser, baseURL }) => {
   const base = "/api/cases/1999-1218";
   const session = base + "/investigation";
   const headers = { "X-ColdCase-Request": "1" };
@@ -44,8 +44,8 @@ test("case branches progress through reviewed evidence, saved links and verified
   expect(people.some((p: { id: string }) => p.id === "lars")).toBeTruthy();
   const openingMap = await (await page.request.get(base + "/map")).json();
   expect(openingMap.locations.some((p: { id: string }) => p.id === "mill-road")).toBeFalsy();
-  const other = await browser.newContext();
-  const privatePeople = await (await other.request.get("http://127.0.0.1:5173" + base + "/people")).json();
+  const other = await browser.newContext({ baseURL });
+  const privatePeople = await (await other.request.get(base + "/people")).json();
   expect(privatePeople.some((p: { id: string }) => p.id === "lars")).toBeFalsy();
   await other.close();
   await review("vehicle-log", "work-order", "lars-statement");
@@ -103,8 +103,8 @@ test("case branches progress through reviewed evidence, saved links and verified
   await expect(page.locator(".workspace-header .status")).toHaveText("Rekonstruert");
   const completedAgain = await page.request.post(session + "/reconstruction", { headers, data: { answers, evidenceIds, routeIds } });
   expect((await completedAgain.json()).accepted).toBeTruthy();
-  const fresh = await browser.newContext();
-  const privateEnding = await fresh.request.get("http://127.0.0.1:5173" + session + "/reconstruction");
+  const fresh = await browser.newContext({ baseURL });
+  const privateEnding = await fresh.request.get(session + "/reconstruction");
   expect(privateEnding.status()).toBe(404);
   await fresh.close();
 });
