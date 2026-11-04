@@ -2,6 +2,8 @@ namespace ColdCase.Domain.Cases;
 
 public sealed class CaseFile
 {
+    public string? CoverImagePath { get; set; }
+    public string? MissingPersonPortraitPath { get; set; }
     public string Id { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;

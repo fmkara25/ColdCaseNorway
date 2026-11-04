@@ -57,7 +57,7 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", service = "ColdCase.Api" }));
 app.MapGet("/api/cases", async (ICaseRepository cases, CancellationToken cancellationToken) =>
     Results.Ok((await cases.ListAsync(cancellationToken)).Select(x => new
-    { x.Id, x.Title, x.Location, x.DisappearanceDate, x.MissingPerson, x.Age, x.Summary })));
+    { x.Id, x.Title, x.Location, x.DisappearanceDate, x.MissingPerson, x.Age, x.Summary, x.CoverImagePath, x.MissingPersonPortraitPath })));
 app.MapGet("/api/cases/{id}", async (string id, ICaseRepository cases, CancellationToken cancellationToken) =>
 {
     var file = await cases.FindAsync(id, cancellationToken);
@@ -71,7 +71,7 @@ app.MapGet("/api/cases/{id}/people", async (string id, ICaseRepository cases, Ga
         return (IResult)Results.Problem(statusCode: 404, title: "Saken finnes ikke.");
     var people = (await game.MaterialsAsync(id, cancellationToken)).People;
     return Results.Ok(people.Select(x => new
-        { x.Id, x.Name, x.Age, x.Role, x.Introduction }));
+        { x.Id, x.Name, x.Age, x.Role, x.Introduction, x.PortraitImagePath }));
 });
 app.MapGet("/api/cases/{id}/evidence", async (string id, ICaseRepository cases, GameplayView game, CancellationToken cancellationToken) =>
 {

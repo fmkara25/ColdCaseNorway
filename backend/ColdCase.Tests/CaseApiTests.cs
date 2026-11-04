@@ -24,7 +24,7 @@ public sealed class CaseApiTests
         using var response = await client.GetAsync("/api/cases/1999-1218");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        var expected = new[] { "id", "title", "location", "disappearanceDate", "missingPerson", "age", "summary", "initialReport" };
+        var expected = new[] { "id", "title", "location", "disappearanceDate", "missingPerson", "age", "summary", "initialReport", "coverImagePath", "missingPersonPortraitPath" };
         Assert.Equal(expected.Order(), json.RootElement.EnumerateObject().Select(x => x.Name).Order());
         Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
         using var listResponse = await client.GetAsync("/api/cases");
@@ -70,7 +70,7 @@ public sealed class CaseApiTests
         Assert.DoesNotContain("INTERNAL_SECRET", body);
         using var json = JsonDocument.Parse(body);
         Assert.Equal(1, json.RootElement.GetArrayLength());
-        Assert.Equal(new[] { "id", "name", "age", "role", "introduction" }.Order(),
+        Assert.Equal(new[] { "id", "name", "age", "role", "introduction", "portraitImagePath" }.Order(),
             json.RootElement[0].EnumerateObject().Select(x => x.Name).Order());
         using var missing = await client.GetAsync("/api/cases/unknown/people");
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);

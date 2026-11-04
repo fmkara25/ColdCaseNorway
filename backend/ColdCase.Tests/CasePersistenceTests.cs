@@ -22,6 +22,7 @@ public sealed class CasePersistenceTests
         await database.Database.MigrateAsync();
         Assert.Empty(await database.Database.GetPendingMigrationsAsync());
         Assert.Contains("20261104010000_InitialCaseArchive", await database.Database.GetAppliedMigrationsAsync());
+        Assert.Contains("20261104090000_AddArchiveImages", await database.Database.GetAppliedMigrationsAsync());
         Assert.False(database.Database.HasPendingModelChanges());
         var repository = new CaseRepository(database);
         var cases = await repository.ListAsync(CancellationToken.None);
@@ -29,9 +30,12 @@ public sealed class CasePersistenceTests
         var file = await repository.FindAsync("1999-1218", CancellationToken.None);
         Assert.NotNull(file);
         Assert.Equal("Ingrid Solberg", file.MissingPerson);
+        Assert.Equal("/images/skardal-winter.webp", file.CoverImagePath);
+        Assert.Equal("/images/ingrid-1999.webp", file.MissingPersonPortraitPath);
         Assert.Equal(new DateOnly(1999, 12, 18), file.DisappearanceDate);
         var people = await repository.ListPeopleAsync("1999-1218", CancellationToken.None);
         Assert.Equal(new[] { "erik", "ingrid", "jonas", "maria" }, people.Select(x => x.Id));
+        Assert.Equal(file.MissingPersonPortraitPath, people.Single(x => x.Id == "ingrid").PortraitImagePath);
         Assert.Empty(await repository.ListPeopleAsync("other-case", CancellationToken.None));
         var evidence = await repository.ListEvidenceAsync("1999-1218", CancellationToken.None);
         Assert.Equal(7, evidence.Count);
