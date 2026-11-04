@@ -87,7 +87,7 @@ test("case branches progress through reviewed evidence, saved links and verified
   expect(notClosed.isReconstructed).toBeFalsy();
   await page.goto("/cases/1999-1218/map");
   const names = ["Selskapets base", "Arbeidsstedet", "Butikken", "Gamle Møllevei", "Veikrysset mot sykehuset", "Gamle Møllevei", "Det gamle serviceområdet", "Skardal Nord bensinstasjon", "Selskapets base"];
-  for (const name of names) await page.getByRole("button", { name, exact: true }).click();
+  for (const name of names) await page.getByRole("button", { name:`Legg til ${name} i ruten`, exact:true }).click();
   await expect(page.locator(".route-result")).toContainText("43,2 km");
   await page.getByRole("link", { name: "Bruk ruten i rekonstruksjonen" }).click();
   await page.getByLabel("Hvem kjørte bilen?", { exact: true }).selectOption("lars");
