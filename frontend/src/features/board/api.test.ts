@@ -24,3 +24,15 @@ it("surfaces a stale-write conflict so the draft is not silently overwritten", a
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 409 })));
   await expect(saveBoard("1999-1218", { version: 0, board })).rejects.toMatchObject({ status: 409, message: expect.stringContaining("beholdt") });
 });
+it("reads a board without creating another session and validates its snapshot", async () => {
+  const mock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ version:2, board }))); vi.stubGlobal("fetch", mock);
+  const { readBoard } = await import("./api");
+  await expect(readBoard("1999-1218")).resolves.toMatchObject({ version:2 });
+  expect(mock).toHaveBeenCalledWith("/api/cases/1999-1218/investigation", expect.objectContaining({ signal:undefined }));
+});
+it("uses Bokmål feedback for interrupted board writes and unreadable responses", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch INTERNAL")));
+  await expect(saveBoard("1999-1218", { version:0, board })).rejects.toThrow("Forbindelsen ble brutt.");
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("<html>INTERNAL</html>")));
+  await expect(saveBoard("1999-1218", { version:0, board })).rejects.toThrow("Kunne ikke lese tavlesvaret.");
+});

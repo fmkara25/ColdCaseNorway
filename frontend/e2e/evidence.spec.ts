@@ -11,10 +11,10 @@ test("evidence document can be enlarged and reading progress survives refresh", 
   await expect(dialog).toContainText("120 %");
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
-  await page.getByRole("button", { name: "Marker som gjennomgått" }).click();
-  await expect(page.getByRole("button", { name: "Gjennomgått", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "Ta med i vurderingen" }).click();
+  await expect(page.getByRole("button", { name: "Tatt med i vurderingen", exact: true })).toBeDisabled();
   await page.reload();
-  await expect(page.getByRole("button", { name: "Gjennomgått", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Tatt med i vurderingen", exact: true })).toBeDisabled();
   await page.goto("/cases/1999-1218/evidence/unknown");
   await expect(page.getByRole("heading", { name: "Dokumentet er ikke tilgjengelig i denne saken." })).toBeVisible();
 });

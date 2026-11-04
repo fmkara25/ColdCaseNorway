@@ -92,6 +92,7 @@ jobs:
           path: |
             frontend/test-results/desk-*/**/*.png
             frontend/test-results/interviews-*/**/*.png
+            frontend/test-results/comparison-*/**/*.png
           if-no-files-found: ignore
           retention-days: 7
       - name: Container diagnostics

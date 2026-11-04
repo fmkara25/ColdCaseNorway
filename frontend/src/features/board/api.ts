@@ -1,4 +1,4 @@
-import { ApiError } from "../cases/api";
+import { ApiError, fetchJson } from "../cases/api";
 export interface BoardNote { id: string; text: string }
 export interface BoardPosition { id: string; x: number; y: number }
 export interface BoardConnection { id: string; fromId: string; toId: string; label: string }
@@ -15,17 +15,18 @@ export function isBoardSnapshot(value: unknown): value is BoardSnapshot {
 async function request(caseId: string, method: "POST" | "PUT", body?: BoardSnapshot): Promise<BoardSnapshot> {
   const response = await fetch(`/api/cases/${encodeURIComponent(caseId)}/investigation${method === "PUT" ? "/board" : ""}`, {
     method, credentials: "same-origin", headers: { "X-ColdCase-Request": "1", ...(body ? { "Content-Type": "application/json" } : {}) }, body: body ? JSON.stringify(body) : undefined,
-  });
+  }).catch(() => { throw new Error("Forbindelsen ble brutt. Hent den lagrede tavlen før du prøver igjen."); });
   if (!response.ok) {
     const error = new ApiError(response.status);
     error.message = response.status === 409 ? "Tavlen er endret i en annen fane. Dine ulagrede endringer er beholdt her." :
       response.status === 401 ? "Lagringstilgangen er utløpt. Åpne den lagrede etterforskningen på nytt." : "Kunne ikke lagre eller åpne tavlen. Prøv igjen.";
     throw error;
   }
-  const value: unknown = await response.json();
+  const value: unknown = await response.json().catch(() => { throw new Error("Kunne ikke lese tavlesvaret. Hent den lagrede tavlen før du prøver igjen."); });
   if (!isBoardSnapshot(value)) throw new Error("Ugyldig tavledata.");
   return value;
 }
+export const readBoard = (caseId: string, signal?: AbortSignal) => fetchJson<BoardSnapshot>(`/api/cases/${encodeURIComponent(caseId)}/investigation`, signal, isBoardSnapshot);
 export const openInvestigation = (caseId: string) => request(caseId, "POST");
 export const saveBoard = (caseId: string, snapshot: BoardSnapshot) => request(caseId, "PUT", snapshot);
 export function removeCard(board: BoardState, id: string): BoardState {
