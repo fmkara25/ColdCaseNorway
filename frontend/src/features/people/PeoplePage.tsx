@@ -54,7 +54,7 @@ function InterviewStage({ caseId, person }: { caseId:string; person:Person }) {
   const currentReplyPage = Math.min(replyPage, pages.length - 1);
   const actions = progress.data?.actions.filter(action => action.personId === person.id) ?? [];
   const questions = Math.min(questionPage, Math.max(0, Math.ceil(actions.length / 3) - 1));
-  useEffect(() => { if (replyId) responseHeading.current?.focus(); }, [replyId]);
+  useEffect(() => { if (replyId || topic?.action.id) responseHeading.current?.focus(); }, [replyId, topic?.action.id]);
   const mutation = useMutation({ mutationFn: ({ action, approachId, version }: { action:CaseAction; approachId?:string; version:number }) =>
     progressCommand(caseId, `actions/${encodeURIComponent(action.id)}`, undefined, approachId ? { approachId, expectedVersion:version } : undefined),
     onSuccess: async (value, variables) => {
@@ -75,13 +75,13 @@ function InterviewStage({ caseId, person }: { caseId:string; person:Person }) {
   return <section className="people-stage interview-stage" aria-label="Samtale og personopplysninger">
     <header className="people-stage-heading"><div><p className="eyebrow">FORKLARINGENE MÅ PRØVES MOT KILDENE</p><h1>{person.name}</h1></div><Link className="quiet-game-link" to="../people">← Personer</Link></header>
     <div className="interview-scene"><section className="interview-portrait"><span className="paper-clip" aria-hidden="true"/><ArchiveImage src={person.portraitImagePath} name={person.name}/><strong className="interview-person-name">{person.name}</strong><p>{person.role}</p><small>{person.age} år i 1999</small></section>
-      <section className="interview-conversation" aria-label="Gjeldende forklaring"><header><span className="eyebrow">{activeReply ? "REGISTRERT FORKLARING" : "ARKIVOPPLYSNINGER"}</span><button disabled={!history.length} onClick={() => log.current?.showModal()}>Tidligere samtaler</button></header>
-        <div className="action-history" aria-live="polite"><h2 ref={responseHeading} tabIndex={-1}>{activeReply?.label ?? "Utgangspunktet"}</h2>
-          {activeReply?.approach && <p className="approach-receipt">Din tilnærming: {activeReply.approach.label}</p>}
-          <blockquote>{pages[currentReplyPage]}</blockquote>
+      <section className="interview-conversation" aria-label="Gjeldende forklaring"><header><span className="eyebrow">{topic ? "SPØRSMÅLET DU VIL STILLE" : activeReply ? "REGISTRERT FORKLARING" : "ARKIVOPPLYSNINGER"}</span><button disabled={!history.length} onClick={() => log.current?.showModal()}>Tidligere samtaler</button></header>
+        <div className="action-history" aria-live="polite"><h2 ref={responseHeading} tabIndex={-1}>{topic?.action.label ?? activeReply?.label ?? "Utgangspunktet"}</h2>
+          {!topic && activeReply?.approach && <p className="approach-receipt">Din tilnærming: {activeReply.approach.label}</p>}
+          {topic ? <p className="interview-topic-context">Ta utgangspunkt i kildene du har undersøkt. Velg hvordan du vil stille spørsmålet nedenfor.</p> : <blockquote>{pages[currentReplyPage]}</blockquote>}
         </div>
-        <div className="reply-pagination"><button aria-label="Forrige del av forklaringen" disabled={currentReplyPage === 0} onClick={() => setReplyPage(currentReplyPage - 1)}>←</button><span>{currentReplyPage + 1} / {pages.length}</span><button aria-label="Neste del av forklaringen" disabled={currentReplyPage >= pages.length - 1} onClick={() => setReplyPage(currentReplyPage + 1)}>→</button></div>
-        {newSources.length > 0 && <div className="interview-sources" aria-label="Nytt materiale">{newSources.map(item => <Link key={item.id} to={`${root}/evidence/${encodeURIComponent(item.id)}`}>Nytt dokument: {item.title} ↗</Link>)}</div>}
+        {!topic && <div className="reply-pagination"><button aria-label="Forrige del av forklaringen" disabled={currentReplyPage === 0} onClick={() => setReplyPage(currentReplyPage - 1)}>←</button><span>{currentReplyPage + 1} / {pages.length}</span><button aria-label="Neste del av forklaringen" disabled={currentReplyPage >= pages.length - 1} onClick={() => setReplyPage(currentReplyPage + 1)}>→</button></div>}
+        {!topic && newSources.length > 0 && <div className="interview-sources" aria-label="Nytt materiale">{newSources.map(item => <Link key={item.id} to={`${root}/evidence/${encodeURIComponent(item.id)}`}>Nytt dokument: {item.title} ↗</Link>)}</div>}
       </section>
     </div>
     <section className="interview-choices" aria-label="Samtalevalg"><div className="interview-prompt"><p className="eyebrow">{topic ? "VELG TILNÆRMING" : "DITT NESTE SPØRSMÅL"}</p><h2>{topic ? "Hvordan vil du ta det opp?" : "Hva vil du avklare?"}</h2>{topic && <p>Valget lagres når du stiller spørsmålet.</p>}</div>

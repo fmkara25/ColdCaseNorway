@@ -34,6 +34,8 @@ for (const choice of ["open", "document"] as const) {
     await page.goto("/cases/1999-1218/people/maria");
     const question = page.getByRole("button", { name:"Spør om notatet og den avtalte bagen", exact:true });
     await question.click();
+    await expect(page.locator(".action-history").getByRole("heading")).toHaveText("Spør om notatet og den avtalte bagen");
+    await expect(page.locator(".action-history")).not.toContainText("Bagen ble stående igjen");
     const approach = choice === "open" ? "Gi Maria rom til å forklare" : "Legg frem notatet først";
     await expect(page.getByRole("button", { name:approach, exact:true })).toBeVisible();
     const untouched = await (await page.request.get(session + "/progress")).json();

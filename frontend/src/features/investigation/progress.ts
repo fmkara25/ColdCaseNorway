@@ -28,13 +28,13 @@ export function useProgress(caseId: string, enabled = true) {
 export async function progressCommand(caseId: string, path: string, locationIds?: string[], choice?: { approachId: string; expectedVersion: number }): Promise<Progress> {
   const response = await fetch(`/api/cases/${encodeURIComponent(caseId)}/investigation/${path}`, {
     method: "POST", credentials: "same-origin", keepalive: true, headers: { "X-ColdCase-Request": "1", "Content-Type": "application/json" }, body: JSON.stringify({ locationIds: locationIds ?? null, ...choice }),
-  });
+  }).catch(() => { throw new Error("Forbindelsen ble brutt. Oppdater opplysningene før du prøver igjen."); });
   if (!response.ok) {
     const error = new ApiError(response.status);
     error.message = response.status === 409 ? "Etterforskningen er endret i en annen fane. Oppdater opplysningene og prøv igjen." : response.status === 400 ? "Valget eller ruten er ikke tilgjengelig. Oppdater opplysningene og prøv igjen." : "Opplysningen er ikke tilgjengelig, eller forbindelsen ble brutt. Oppdater og prøv igjen.";
     throw error;
   }
-  const value: unknown = await response.json();
+  const value: unknown = await response.json().catch(() => { throw new Error("Kunne ikke lese svaret. Oppdater opplysningene før du prøver igjen."); });
   if (!isProgress(value)) throw new Error("Ugyldige etterforskningsopplysninger.");
   return value;
 }
