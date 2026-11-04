@@ -1,0 +1,40 @@
+.chronology-stage { height:100%; min-height:0; overflow:hidden; padding:24px 36px 20px; display:grid; grid-template-rows:auto minmax(0,.9fr) minmax(0,1fr) auto; gap:18px; background:radial-gradient(ellipse at 25% 10%,#604b2b30,transparent 60%),linear-gradient(115deg,#282822,#141a20); }
+.chronology-heading { display:flex; gap:24px; align-items:center; }
+.chronology-heading h1 { margin:0; color:#e5dcc9; font-size:34px; }
+.chronology-heading .eyebrow { margin-bottom:8px; }
+.chronology-heading>p { max-width:40ch; margin-left:auto; font-size:12px; }
+.chronology-pagination { display:flex; align-items:center; gap:12px; font:10px monospace; }
+.chronology-pagination button { padding:7px 12px; background:#1e252a; border-color:#685e4b; color:#d5c5a4; }
+.chronology-cards { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); gap:14px; min-height:0; }
+.chronology-cards li { min-width:0; min-height:0; }
+.chronology-card { position:relative; width:100%; height:100%; display:grid; grid-template-columns:auto minmax(0,1fr); align-content:center; align-items:center; gap:8px 20px; padding:14px 22px; text-align:left; color:#353126; background:linear-gradient(110deg,#d5c9ae,#e8dfca); border:1px solid #9e8c67; box-shadow:3px 4px 10px #0004; }
+.chronology-card.planned { background:linear-gradient(110deg,#c7cbd0,#e1e0dc); border-style:dashed; }
+.chronology-card.unknown { background:#242c30; color:#c7bfae; border-style:dashed; }
+.chronology-card[aria-pressed=true] { outline:2px solid #dec088; outline-offset:2px; background:#eedbb5; }
+.chronology-stamp { grid-column:1/-1; font:9px monospace; letter-spacing:1px; opacity:.7; }
+.chronology-card strong { font:28px Georgia,serif; white-space:nowrap; }
+.chronology-card-title { font:15px/1.3 Georgia,serif; padding-right:12px; overflow-wrap:anywhere; }
+.chronology-marker { position:absolute; right:10px; top:9px; font-size:12px; }
+.chronology-inspection { min-height:0; display:grid; grid-template-columns:minmax(0,1.8fr) minmax(0,1fr); border:1px solid #6b624f; background:#1b2227; overflow:hidden; }
+.chronology-paper { min-height:0; overflow:auto; padding:24px 30px; color:#332e24; background:linear-gradient(110deg,#ddd1b7,#e9dfca); }
+.chronology-paper .eyebrow { color:#786746; font-size:9px; }
+.chronology-paper h2 { margin:12px 0; font:25px Georgia,serif; }
+.chronology-paper>p:last-child { font:16px/1.8 Georgia,serif; white-space:pre-wrap; }
+.chronology-source { min-height:0; overflow:auto; padding:24px; }
+.chronology-large-time { font:28px Georgia,serif; color:#d8bf91; }
+.chronology-source p { font-size:12px; line-height:1.7; }
+.chronology-source a,.chronology-next a { display:inline-block; padding:10px 14px; border:1px solid #897750; color:#e3c48c; font-size:12px; }
+.chronology-empty { grid-column:1/-1; align-self:center; padding:20px 30px; }
+.chronology-empty>span { float:left; font-size:55px; margin-right:24px; color:#b9a27b; }
+.chronology-empty h2 { font:26px Georgia,serif; color:#ded1b8; margin:0 0 10px; }
+.chronology-empty p { font-size:12px; margin:0; max-width:70ch; }
+.chronology-comparison { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:24px; padding:18px 22px; border:1px solid #6b604a; background:#1b2227; min-height:0; }
+.chronology-comparison .eyebrow { margin-bottom:8px; }
+.chronology-comparison h2 { font:24px/1.2 Georgia,serif; margin:0; color:#dfd1b4; }
+.chronology-receipts { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.chronology-receipts:empty { display:none; }
+.chronology-receipts button { padding:7px 10px; background:#303433; border-color:#786b50; color:#dbc7a0; font-size:10px; }
+.chronology-next { align-self:center; }
+.chronology-next p { font-size:12px; margin:0 0 8px; line-height:1.6; }
+@media(max-height:780px) and (min-width:801px) { .chronology-stage { padding:16px 28px; gap:14px; } .chronology-heading h1 { font-size:28px; } .chronology-card { padding:12px 18px; gap:6px 16px; } .chronology-card strong { font-size:24px; } .chronology-paper,.chronology-source { padding:18px 22px; } .chronology-comparison { padding:14px 18px; } .chronology-comparison h2 { font-size:21px; } }
+@media(max-width:800px) { .chronology-stage { padding:14px; gap:12px; grid-template-rows:auto minmax(0,1fr) minmax(0,.85fr) auto; } .chronology-heading { gap:10px; justify-content:space-between; } .chronology-heading h1 { font-size:25px; } .chronology-heading .eyebrow { font-size:7px; } .chronology-heading>p { display:none; } .chronology-pagination { gap:8px; } .chronology-pagination button { padding:5px 9px; } .chronology-cards { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); gap:9px; } .chronology-card { padding:10px; gap:5px; grid-template-columns:1fr; } .chronology-stamp { font-size:7px; letter-spacing:.5px; } .chronology-card strong { font-size:23px; } .chronology-card-title { font-size:11px; } .chronology-inspection { grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); } .chronology-paper,.chronology-source { padding:12px; } .chronology-paper .eyebrow { font-size:7px; line-height:1.5; } .chronology-paper h2 { font-size:18px; } .chronology-paper>p:last-child { font-size:13px; } .chronology-large-time { font-size:21px; } .chronology-source p { font-size:10px; } .chronology-source a,.chronology-next a { padding:7px 9px; font-size:10px; } .chronology-empty { padding:16px; } .chronology-empty>span { font-size:35px; margin-right:12px; } .chronology-empty h2 { font-size:19px; } .chronology-empty p { font-size:11px; } .chronology-comparison { grid-template-columns:1fr; gap:10px; padding:12px; } .chronology-comparison .eyebrow { display:none; } .chronology-comparison h2 { font-size:19px; } .chronology-receipts { margin-top:7px; gap:5px; } .chronology-receipts button { font-size:9px; padding:5px 7px; } .chronology-next p { font-size:10px; margin-bottom:6px; line-height:1.5; } }
