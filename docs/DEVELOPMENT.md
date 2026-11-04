@@ -1,10 +1,10 @@
 # Development
 
-## Current slice
+## Current implementation
 
-Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline → interactive schematic map/route estimator → server-saved board and notes → gated research and interviews → final reconstruction and epilogue. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later tools are explicitly unavailable. The case title is provisional.
+Archive → open case → overview → people register and details → opening evidence reader → source-linked timeline → interactive schematic map/route estimator → server-saved board and notes → gated research and interviews → final reconstruction and epilogue. React, TypeScript, Router, Query, Tailwind and the existing .NET 10 solution are preserved. Public case data comes from PostgreSQL through the API; no frontend story fixtures or runtime AI. The initial report is a Bokmål adaptation of the Story Bible, not a new narrative branch. Later material is unlocked by server-authorized investigation progress.
 
-This is an initial slice, not the finished 45–60 minute game. Authentication, investigations/save ownership, reconstruction, assets, audio and Azure deployment remain pending. Never include secret solution data in public case responses.
+The complete Case 01 core loop is implemented, with anonymous save ownership, final reconstruction, initial illustrations and optional sound. Human 45–60 minute pacing/acceptance, account-based recovery, deployment hardening and Azure deployment remain pending. Never include secret solution data in public case responses.
 
 ## Local startup (PowerShell, repository root)
 
@@ -28,7 +28,7 @@ npm run dev
 
 Open the Vite URL printed by the terminal. Vite proxies `/api` to `http://localhost:5249`; no cross-origin browser access is needed. Direct API checks: `/api/health`, `/api/cases`, `/api/cases/1999-1218`. Health is process liveness, not database readiness.
 
-Development startup applies committed EF migrations, then inserts the initial case if missing. Production never applies migrations or seeds on web process startup. The seed does not change existing case rows. The initial migration intentionally fails against an unbaselined legacy `Cases` table rather than silently assuming its shape.
+Development startup applies committed EF migrations, then seeds missing case content and reviewed metadata. Production never applies migrations or seeds on web process startup. Seeding updates illustration metadata but does not reset player investigations. The initial migration intentionally fails against an unbaselined legacy `Cases` table rather than silently assuming its shape.
 
 ### Existing EnsureCreated database (preserve data)
 
@@ -43,7 +43,7 @@ dotnet ef migrations has-pending-model-changes --project backend/ColdCase.Infras
 dotnet ef migrations script --idempotent --project backend/ColdCase.Infrastructure --output migrations.sql
 ```
 
-Review the generated SQL and test it against a restored copy before production. Apply with a dedicated deployment identity; the production web identity needs only access required for reads, not schema-owner credentials. Production case content must be provisioned explicitly from reviewed opening-only data; development seed is not a production content pipeline. PostgreSQL TLS, secret injection, HTTPS termination and same-origin `/api` routing must be configured by the eventual hosting deployment. Vite's proxy is development-only.
+Review the generated SQL and test it against a restored copy before production. Apply with a dedicated deployment identity; the production web identity needs case-content reads and investigation reads/writes, not schema-owner credentials. Production case content, including private progression/solution data, must be provisioned explicitly through a reviewed process and protected by the API access filters; development seed is not a production content pipeline. PostgreSQL TLS, secret injection, HTTPS termination and same-origin `/api` routing must be configured by the eventual hosting deployment. Vite's proxy is development-only.
 
 For future schema changes, generate and commit a new migration plus snapshot with `dotnet ef migrations add NAME --project backend/ColdCase.Infrastructure`; do not edit an already applied migration. CI rejects model/snapshot drift and runs real PostgreSQL migration/persistence tests.
 
@@ -69,7 +69,7 @@ dotnet test backend/ColdCase.slnx
 
 Run the backend command from the repository root. CI provisions its own isolated PostgreSQL service. The persistence test checks migration application/reapplication, model drift, idempotent seeding, case listing, retrieval and missing IDs. API host tests cover response allowlists, missing cases and sanitized server errors. Playwright covers the real archive → overview → person selection/refresh flow and mobile/missing-case behavior against the API and PostgreSQL in CI.
 
-Manual acceptance: archive opens the correct overview; refreshing its URL works in Vite; an unknown case shows a Bokmål error; stopping the API shows retry feedback; narrow screens remain usable; hidden tools do not imply finished gameplay.
+Manual acceptance: archive opens the correct overview; refreshing its URL works in Vite; an unknown case shows a Bokmål error; stopping the API shows retry feedback; narrow screens remain usable; new material and the ending stay private until authorized progress.
 
 
 ## Browser acceptance
@@ -84,7 +84,7 @@ npm run test:e2e
 Playwright starts its own API and Vite servers. Stop any existing processes on ports 5249/5173 first. It uses Development migrations and seed against the dedicated test connection, never the production database. People expose only opening introductions; hidden people and future interview revelations are not public API fields.
 
 
-Opening evidence exposes only six initial archive extracts. Reading marks use Zustand/localStorage, are case-scoped and provide no authorization or gameplay unlocks. They stay in the current browser and are not a server save. Hidden future evidence must be authorized server-side before any body is returned. Native modal dialogs provide keyboard focus containment, Escape-to-close and text enlargement. Browser CI verifies zoom and reading-state persistence.
+Opening evidence exposes seven initial archive extracts. Read markers are case/session-scoped PostgreSQL progress and can satisfy authored action prerequisites only for accessible evidence. Legacy local reading marks grant no server access. Hidden later evidence is authorized server-side before any body is returned. Native modal dialogs provide keyboard focus containment, Escape-to-close and text enlargement. Browser CI verifies zoom and reading-state persistence.
 
 
 The opening timeline distinguishes approximate observations, the unknown interval and the scheduled bus; selecting two known times measures an interval without asserting the travel actually happened. Source links point to accessible opening evidence and are checked by persistence tests. No late-game route or accident timestamps are returned.
@@ -96,16 +96,16 @@ Map locations and bidirectional roads are case-scoped PostgreSQL entities, with 
 
 The map is deliberately schematic and not to geographic scale; road distances are authoritative. No external map service or paid provider is used. Walking and winter-driving intervals are authored design estimates, not measured historical travel times. RouteConsistencyTests validate positive/ordered estimates, graph connectivity, the opening walking window, odometer tolerance and later chronology/alibi constraints. They establish internal consistency under these assumptions, not empirical realism.
 
-Following author authorization to revise details for consistency, the previous proposed 43.4 km route was replaced by a 43.2 km model. Its critical pickup-to-transaction section permits up to 25 minutes driving plus an explicit 8-minute stop allowance inside 36 minutes, leaving 3 minutes margin. The full estimate differs from the 44 km odometer record by 0.8 km. These are authoring constraints, not additional exact event timestamps in player evidence. Later places remain unavailable until server-authorized investigation progression is implemented; the browser never receives their coordinates or names in the opening map.
+Following author authorization to revise details for consistency, the previous proposed 43.4 km route was replaced by a 43.2 km model. Its critical pickup-to-transaction section permits up to 25 minutes driving plus an explicit 8-minute stop allowance inside 36 minutes, leaving 3 minutes margin. The full estimate differs from the 44 km odometer record by 0.8 km. These are authoring constraints, not additional exact event timestamps in player evidence. Later places remain unavailable until the required server-authorized investigation progress; the browser never receives their coordinates or names in the opening map.
 
 
 ## Anonymous investigation saves
 
-Opening the board creates/resumes a case-scoped anonymous investigation. A random 256-bit capability is held only in an HttpOnly, SameSite=Strict cookie (Secure in production); only its SHA-256 hash is stored in PostgreSQL. Saves expire after 90 days server-side. Clearing browser cookies loses access; no cross-device/account recovery is claimed. Production HTTPS and backups remain deployment requirements.
+Opening a case creates/resumes a case-scoped anonymous investigation. A random 256-bit capability is held only in an HttpOnly, SameSite=Strict cookie (Secure in production); only its SHA-256 hash is stored in PostgreSQL. Saves expire after 90 days server-side. Clearing browser cookies loses access; no cross-device/account recovery is claimed. Production HTTPS and backups remain deployment requirements.
 
 Board snapshots use a versioned JSONB schema and a row version checked atomically on update. A stale write returns 409 and the frontend preserves its draft. Saving is explicit; navigation away with unsaved edits is guarded. Case ownership, allowed visible references, note sizes, finite coordinates, unique connections and payload limits are checked server-side. Writes require a custom header with no cross-origin CORS policy. Anonymous session creation is rate limited. Future reverse proxies must forward trusted client addresses correctly before internet deployment.
 
-The board currently persists cards, positions, notes and player hypotheses. It does not award progression or treat a connection label as truth. Server-authorized evidence/interview unlocks remain the next gameplay stage. Player note text is rendered as plain text, never HTML. API tests cover cookie/header isolation and stale writes; PostgreSQL tests cover persistence and atomic concurrency; browser tests cover drag, connection/note persistence, session isolation and unsaved navigation.
+The board persists cards, positions, notes and player hypotheses. Saved source connections can satisfy authored action prerequisites; player-written connection labels are never evaluated as truth. Evidence/interview unlocks are evaluated on the server. Player note text is rendered as plain text, never HTML. API tests cover cookie/header isolation and stale writes; PostgreSQL tests cover persistence and atomic concurrency; browser tests cover drag, connection/note persistence, session isolation and unsaved navigation.
 
 
 ## Deterministic research and interviews
@@ -124,3 +124,11 @@ CaseSolutions holds the questions, private answer/evidence/route rubric and epil
 Incorrect submissions return recoverable feedback without changing progress. An accepted theory and completion flag are saved atomically with optimistic concurrency; the board is preserved. The epilogue is private to that investigation and survives reload. Client route/theory drafts persist only as working hypotheses and grant no server access. It is a reconstruction of the fictional events, not a finding of medical or legal certainty.
 
 The end-to-end acceptance scenario covers opening material, both branches, saved links, route checks, staged statements, wrong-theory recovery, final form/route/source selection, epilogue persistence and another browser's inability to read the ending. This automated scenario does not validate 45–60 minutes of human playtime. Initial archive illustrations and opt-in sound are now included; see [asset provenance and behavior](ASSETS.md). Human playtesting, listening/visual acceptance, further polish, deployment hardening and Azure approval remain pending.
+
+## Keyboard navigation and unexpected UI failures
+
+A shared router frame provides **Hopp til innhold** before the archive/workstation navigation. It becomes visible on keyboard focus and moves focus to the main landmark without adding a hash/history entry. Completed pathname changes move focus to the new workspace; initial page loads, query refreshes and form edits retain normal focus behavior. Blocked unsaved-board navigation therefore does not move focus before the player chooses to leave. Inputs, selects, text areas and sound summaries have a visible focus ring.
+
+A root route error boundary replaces React Router's default developer-oriented failure screen with generic Bokmål recovery controls. It never renders the caught exception, stack or case payload. The error heading labels the focused main landmark. Reload/home recovery does not clear server saves, cookies or local draft storage; volatile unsaved changes may be lost and the screen states this explicitly. Existing API error/retry components and missing-page feedback remain separate. This is UI error containment, not save recovery or a replacement for API authorization.
+
+Browser acceptance checks exercise keyboard skip/navigation focus, active navigation, focus retention during note editing, forced render failure with a private marker, and successful reload recovery. Existing dirty-board navigation and full gameplay scenarios remain regression checks. These checks do not constitute a complete WCAG audit or screen-reader/device certification.
