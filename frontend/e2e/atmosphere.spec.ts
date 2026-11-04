@@ -18,6 +18,8 @@ test("archive illustrations load, stay consistent and fail gracefully", async ({
   await page.reload();
   await expect(page.getByRole("heading", { name: "Ingrid Solberg" })).toBeVisible();
   await expect(page.getByLabel("Ingen illustrasjon av Ingrid Solberg")).toBeVisible();
+  await page.setViewportSize({ width:390, height:844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
 test("sound requires explicit consent, mutes when hidden and starts off after reload", async ({ page }) => {
@@ -47,6 +49,11 @@ test("sound requires explicit consent, mutes when hidden and starts off after re
   await expect.poll(states).toEqual(["suspended"]);
   await page.reload();
   await expect(page.getByText("Lyd: av", { exact:true })).toBeVisible(); expect(await states()).toEqual([]);
+  await page.getByText("Lyd: av", { exact:true }).click();
+  await page.getByRole("button", { name:"Slå på lyd" }).click();
+  await expect.poll(states).toEqual(["running"]);
+  await page.getByRole("link", { name:"← Saksarkiv" }).click();
+  await expect.poll(states).toEqual(["closed"]);
 });
 
 test("unavailable audio does not block the investigation", async ({ page }) => {
@@ -54,7 +61,7 @@ test("unavailable audio does not block the investigation", async ({ page }) => {
   await page.goto("/cases/1999-1218");
   await page.getByText("Lyd: av", { exact:true }).click();
   await page.getByRole("button", { name:"Slå på lyd" }).click();
-  await expect(page.getByRole("status")).toContainText("Du kan spille videre uten lyd.");
+  await expect(page.locator(".sound-controls").getByRole("status")).toContainText("Du kan spille videre uten lyd.");
   await page.getByRole("link", { name:"BEVIS", exact:true }).click();
   await expect(page.getByRole("heading", { name:"Bevis", exact:true })).toBeVisible();
 });
