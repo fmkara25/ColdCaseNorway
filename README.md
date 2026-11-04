@@ -57,4 +57,4 @@ The frontend uses a feature-based architecture.
 
 ## Status
 
-Currently in development.
+Initial archive → case overview slice implemented. See [development setup and validation](docs/DEVELOPMENT.md). Full investigation gameplay is still in development.
