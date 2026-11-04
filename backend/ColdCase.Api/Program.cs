@@ -1,4 +1,5 @@
 using ColdCase.Application.Cases;
+using ColdCase.Api.Contracts;
 using ColdCase.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,12 +12,24 @@ builder.Services.AddDbContext<CaseDbContext>(options => options.UseNpgsql(
 builder.Services.AddScoped<ICaseRepository, CaseRepository>();
 
 var app = builder.Build();
-app.UseExceptionHandler();
+app.UseExceptionHandler(handler => handler.Run(async context =>
+{
+    await Results.Problem(statusCode: 500, title: "Kunne ikke hente saksopplysningene.",
+        detail: "Prøv igjen senere.").ExecuteAsync(context);
+}));
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["Cache-Control"] = "no-store";
+    await next(context);
+});
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     using var scope = app.Services.CreateScope();
-    await CaseSeed.InitializeDevelopmentAsync(scope.ServiceProvider.GetRequiredService<CaseDbContext>());
+    var database = scope.ServiceProvider.GetRequiredService<CaseDbContext>();
+    await database.Database.MigrateAsync();
+    await CaseSeed.InitializeDevelopmentAsync(database);
 }
 app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", service = "ColdCase.Api" }));
 app.MapGet("/api/cases", async (ICaseRepository cases, CancellationToken cancellationToken) =>
@@ -26,7 +39,9 @@ app.MapGet("/api/cases/{id}", async (string id, ICaseRepository cases, Cancellat
 {
     var file = await cases.FindAsync(id, cancellationToken);
     return file is null
-        ? (IResult)Results.NotFound(new { message = "Saken finnes ikke." })
-        : Results.Ok(file);
+        ? (IResult)Results.Problem(statusCode: 404, title: "Saken finnes ikke.")
+        : Results.Ok(CaseOverviewResponse.From(file));
 });
 app.Run();
+
+public partial class Program { }

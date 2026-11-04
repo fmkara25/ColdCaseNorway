@@ -28,7 +28,23 @@ npm run dev
 
 Open the Vite URL printed by the terminal. Vite proxies `/api` to `http://localhost:5249`; no cross-origin browser access is needed. Direct API checks: `/api/health`, `/api/cases`, `/api/cases/1999-1218`. Health is process liveness, not database readiness.
 
-Development startup creates the schema and inserts the initial case if missing. `EnsureCreated` is a temporary bootstrap for this initial schema only. Before evolving an existing database, replace it with reviewed EF migrations; do not mix migrations and EnsureCreated. Production does not initialize or seed automatically.
+Development startup applies committed EF migrations, then inserts the initial case if missing. Production never applies migrations or seeds on web process startup. The seed does not change existing case rows. The initial migration intentionally fails against an unbaselined legacy `Cases` table rather than silently assuming its shape.
+
+### Existing EnsureCreated database (preserve data)
+
+Do not delete the volume/database or run the initial migration blindly. Back up the database and verify the backup is restorable. The safest transition for this small initial slice is to create a **new database name**, apply migrations there, then copy existing `Cases` rows with an explicit column list after schema comparison and validation. Verify row counts/content and switch the connection only after validation; retain the old database for rollback. Alternatively, a DBA can baseline migration history after proving the existing schema exactly matches the initial migration. Never mark a migration as applied without schema verification. No automatic baseline or destructive reset is included in this PR.
+
+### Migration workflow (repository root)
+
+```powershell
+dotnet tool restore
+dotnet ef migrations has-pending-model-changes --project backend/ColdCase.Infrastructure
+dotnet ef migrations script --idempotent --project backend/ColdCase.Infrastructure --output migrations.sql
+```
+
+Review the generated SQL and test it against a restored copy before production. Apply with a dedicated deployment identity; the production web identity needs only access required for reads, not schema-owner credentials. Production case content must be provisioned explicitly from reviewed opening-only data; development seed is not a production content pipeline. PostgreSQL TLS, secret injection, HTTPS termination and same-origin `/api` routing must be configured by the eventual hosting deployment. Vite's proxy is development-only.
+
+For future schema changes, generate and commit a new migration plus snapshot with `dotnet ef migrations add NAME --project backend/ColdCase.Infrastructure`; do not edit an already applied migration. CI rejects model/snapshot drift and runs real PostgreSQL migration/persistence tests.
 
 Database binds only to loopback. `.env` is ignored. Do not put actual credentials in appsettings, Git, screenshots or terminal output. This setup provisions no Azure resources.
 
@@ -50,6 +66,6 @@ $env:TEST_DATABASE_CONNECTION = "Host=localhost;Database=coldcase_test;Username=
 dotnet test backend/ColdCase.slnx
 ```
 
-Run the backend command from the repository root. CI provisions its own isolated PostgreSQL service. The persistence test checks idempotent seeding, case listing, retrieval and missing IDs. It does not establish API or browser end-to-end coverage.
+Run the backend command from the repository root. CI provisions its own isolated PostgreSQL service. The persistence test checks migration application/reapplication, model drift, idempotent seeding, case listing, retrieval and missing IDs. API host tests cover response allowlists, missing cases and sanitized server errors. Browser end-to-end coverage is still pending.
 
 Manual acceptance: archive opens the correct overview; refreshing its URL works in Vite; an unknown case shows a Bokmål error; stopping the API shows retry feedback; narrow screens remain usable; hidden tools do not imply finished gameplay.

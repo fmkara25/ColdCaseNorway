@@ -13,8 +13,13 @@ public sealed class CasePersistenceTests
             "Set TEST_DATABASE_CONNECTION to a dedicated PostgreSQL test database. CI supplies this automatically.");
         var options = new DbContextOptionsBuilder<CaseDbContext>().UseNpgsql(connection).Options;
         await using var database = new CaseDbContext(options);
+        await database.Database.MigrateAsync();
         await CaseSeed.InitializeDevelopmentAsync(database);
         await CaseSeed.InitializeDevelopmentAsync(database);
+        await database.Database.MigrateAsync();
+        Assert.Empty(await database.Database.GetPendingMigrationsAsync());
+        Assert.Contains("20261104010000_InitialCaseArchive", await database.Database.GetAppliedMigrationsAsync());
+        Assert.False(database.Database.HasPendingModelChanges());
         var repository = new CaseRepository(database);
         var cases = await repository.ListAsync(CancellationToken.None);
         Assert.Single(cases.Where(x => x.Id == "1999-1218"));

@@ -7,8 +7,7 @@ public static class CaseSeed
 {
     public static async Task InitializeDevelopmentAsync(CaseDbContext database)
     {
-        // Development bootstrap only. Production must use reviewed EF migrations.
-        await database.Database.EnsureCreatedAsync();
+        // Call only after schema migrations have been applied.
         if (await database.Cases.AnyAsync(x => x.Id == "1999-1218")) return;
         database.Cases.Add(new CaseFile
         {
