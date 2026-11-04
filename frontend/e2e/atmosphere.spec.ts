@@ -11,6 +11,7 @@ test("archive illustrations load, stay consistent and fail gracefully", async ({
   await expect.poll(() => portrait.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
   await expect(page.getByText("Illustrasjon – ikke et bevis")).toBeVisible();
   const path = await portrait.getAttribute("src");
+  await page.getByText("Mappen", { exact:true }).click();
   await page.getByRole("link", { name: "PERSONER", exact: true }).click();
   await page.getByRole("link", { name: /Ingrid Solberg/ }).click();
   await expect(page.getByRole("img", { name: "Illustrasjon: Ingrid Solberg" })).toHaveAttribute("src", path!);
@@ -62,6 +63,7 @@ test("unavailable audio does not block the investigation", async ({ page }) => {
   await page.getByText("Lyd: av", { exact:true }).click();
   await page.getByRole("button", { name:"Slå på lyd" }).click();
   await expect(page.locator(".sound-controls").getByRole("status")).toContainText("Du kan spille videre uten lyd.");
+  await page.getByText("Mappen", { exact:true }).click();
   await page.getByRole("link", { name:"BEVIS", exact:true }).click();
   await expect(page.getByRole("heading", { name:"Bevis", exact:true })).toBeVisible();
 });

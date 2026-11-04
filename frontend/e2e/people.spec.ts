@@ -4,6 +4,7 @@ test("archive opens a case and its person register survives a refresh", async ({
   await page.goto("/");
   await page.getByRole("link", { name: "Åpne sak" }).click();
   await expect(page.getByRole("heading", { name: "Forsvinningen i Skardal" })).toBeVisible();
+  await page.getByText("Mappen", { exact:true }).click();
   await page.getByRole("link", { name: "PERSONER", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Personer", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: /Ingrid Solberg/ })).toBeVisible();

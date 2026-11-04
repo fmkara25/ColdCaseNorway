@@ -10,6 +10,7 @@ test("keyboard users can skip navigation and focus follows completed page change
   await page.getByRole("link", { name:"Åpne sak" }).click();
   await expect(page.getByRole("heading", { name:"Forsvinningen i Skardal" })).toBeVisible();
   await expect(page.getByRole("main")).toBeFocused();
+  await page.getByText("Mappen", { exact:true }).click();
   const people = page.getByRole("link", { name:"PERSONER", exact:true });
   await people.focus(); await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name:"Personer", exact:true })).toBeVisible();
