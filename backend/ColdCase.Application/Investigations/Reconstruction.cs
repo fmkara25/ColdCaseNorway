@@ -6,7 +6,7 @@ namespace ColdCase.Application.Investigations;
 public sealed record TheoryOption(string Id, string Label);
 public sealed record TheoryQuestion(string Id, string Label, TheoryOption[] Options);
 public sealed record ReconstructionDefinition(TheoryQuestion[] Questions, Dictionary<string, string> ExpectedAnswers,
-    string[] RequiredFlags, string[] RequiredEvidenceIds, int MaxEvidence, string[] RequiredWaypoints,
+    string[] RequiredFlags, string[][] EvidenceGroups, int MaxEvidence, string[] RequiredWaypoints,
     int LoggedMeters, int ToleranceMeters, string CriticalStartId, string CriticalEndId, int CriticalWindowMinutes, int StopAllowanceMinutes);
 public sealed record ReconstructionSubmission(Dictionary<string, string>? Answers, string[]? EvidenceIds, string[]? RouteIds);
 public sealed record TheoryEvaluation(bool Accepted, string Message);
@@ -24,9 +24,9 @@ public static class Reconstruction
             return new(false, "Teorien forklarer ikke det samlede materialet godt nok. Gå gjennom hendelsesforløpet på nytt.");
         var evidence = submission.EvidenceIds;
         var available = materials.Evidence.Select(x => x.Id).ToHashSet();
-        if (evidence is null || evidence.Length < definition.RequiredEvidenceIds.Length || evidence.Length > definition.MaxEvidence ||
+        if (evidence is null || evidence.Length < definition.EvidenceGroups.Length || evidence.Length > definition.MaxEvidence ||
             evidence.Distinct().Count() != evidence.Length || evidence.Any(id => !available.Contains(id) || !flags.Contains("review:" + id)) ||
-            !definition.RequiredEvidenceIds.All(id => evidence.Contains(id)))
+            !definition.EvidenceGroups.All(group => group.Any(id => evidence.Contains(id))))
             return new(false, "Velg et bredere og mer presist kildegrunnlag. En enkelt forklaring eller et enkelt funn er ikke nok.");
         var path = submission.RouteIds;
         var route = RouteEstimator.Estimate(materials.Map, path);

@@ -77,7 +77,7 @@ test("case branches progress through reviewed evidence, saved links and verified
   expect(finalText).not.toContain("expectedAnswers");
   expect(finalText).not.toContain("requiredWaypoints");
   expect(finalText).not.toContain("epilogue");
-  const evidenceIds = ["vehicle-witness", "vehicle-log", "work-order", "station-receipt", "bumper-report", "clean-vehicle", "no-extra-job"];
+  const evidenceIds = ["vehicle-witness", "vehicle-log", "work-order", "station-receipt", "bumper-report", "clean-vehicle", "bus-ticket"];
   const routeIds = ["depot", "work-site", "market", "mill-road", "hospital-turn", "mill-road", "service-area", "station", "depot"];
   const answers = { driver: "lars", entry: "voluntary", event: "accident", concealment: "fear", location: "mill-road" };
   const wrong = await page.request.post(session + "/reconstruction", { headers, data: { answers: { ...answers, driver: "erik" }, evidenceIds, routeIds } });
@@ -94,7 +94,7 @@ test("case branches progress through reviewed evidence, saved links and verified
   await page.getByLabel("Hva utløste hendelsen?", { exact: true }).selectOption("accident");
   await page.getByLabel("Hvorfor ble hendelsen skjult?", { exact: true }).selectOption("fear");
   await page.getByLabel("Hvor oppsto den sentrale hendelsen?", { exact: true }).selectOption("mill-road");
-  for (const title of ["Kjøretøyet ved butikken", "Kjørebok: bil 14", "Arbeidsordren", "Varelinjene fra Skardal Nord", "Skaden foran til høyre", "Den rengjorte bilen", "Ingen registrert ekstra utrykning"]) await page.getByLabel(`Velg ${title}`, { exact: true }).check();
+  for (const title of ["Kjøretøyet ved butikken", "Kjørebok: bil 14", "Arbeidsordren", "Varelinjene fra Skardal Nord", "Skaden foran til høyre", "Den rengjorte bilen", "Bussbillett til Trondheim"]) await page.getByLabel(`Velg ${title}`, { exact: true }).check();
   await page.getByRole("button", { name: "Lever rekonstruksjonen" }).click();
   await expect(page.getByRole("heading", { name: "Rekonstruksjon levert" })).toBeVisible();
   await expect(page.locator(".epilogue")).toContainText("Ingrid ble ikke funnet");

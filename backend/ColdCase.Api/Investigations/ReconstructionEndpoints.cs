@@ -24,7 +24,7 @@ public static class ReconstructionEndpoints
             var materials = await view.MaterialsAsync(id, cancellationToken);
             return Results.Ok(new
             {
-                isClosed = false, definition.Questions, minEvidence = definition.RequiredEvidenceIds.Length,
+                isClosed = false, definition.Questions, minEvidence = definition.EvidenceGroups.Length,
                 maxEvidence = definition.MaxEvidence, definition.StopAllowanceMinutes,
                 sources = materials.Evidence.Select(x => new { x.Id, x.Title, reviewed = flags.Contains("review:" + x.Id) }),
                 locations = materials.Map.Locations.Select(x => new { x.Id, x.Name })

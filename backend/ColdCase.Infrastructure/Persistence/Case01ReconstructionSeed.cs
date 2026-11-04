@@ -15,7 +15,7 @@ public static class Case01ReconstructionSeed
         new("location", "Hvor oppsto den sentrale hendelsen?", [new("hotel", "Ved hotellet"), new("mill-road", "På Gamle Møllevei"), new("station", "På bensinstasjonen")])
     ], new() { ["driver"] = "lars", ["entry"] = "voluntary", ["event"] = "accident", ["concealment"] = "fear", ["location"] = "mill-road" },
         ["stage:reconstruction", "action:maria-plan", "action:jonas-call", "review:ingrid-letter", "review:lars-account"],
-        ["vehicle-witness", "vehicle-log", "work-order", "station-receipt", "bumper-report", "clean-vehicle", "no-extra-job"], 9,
+        [["vehicle-witness"], ["vehicle-log"], ["work-order"], ["station-receipt"], ["bumper-report"], ["clean-vehicle", "no-extra-job", "lars-slip"], ["bus-ticket", "travel-bag", "ingrid-letter"]], 9,
         ["depot", "work-site", "market", "mill-road", "hospital-turn", "mill-road", "service-area", "station", "depot"],
         44000, 2000, "market", "station", 36, 8);
 

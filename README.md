@@ -28,9 +28,9 @@ The first case follows the disappearance of 23-year-old Ingrid Solberg.
 ### Backend
 
 - C#
-- ASP.NET Core Web API
+- ASP.NET Core Web API (.NET 10)
 - Entity Framework Core
-- ASP.NET Core Identity / JWT
+- Anonymous investigation sessions with HttpOnly cookies (account/Identity support planned)
 
 ### Database
 
@@ -47,7 +47,7 @@ The first case follows the disappearance of 23-year-old Ingrid Solberg.
 - Docker
 - Docker Compose
 - GitHub Actions
-- Microsoft Azure
+- Microsoft Azure (deployment planned; not yet provisioned)
 
 ## Architecture
 
@@ -57,4 +57,4 @@ The frontend uses a feature-based architecture.
 
 ## Status
 
-Initial archive → case overview slice implemented. See [development setup and validation](docs/DEVELOPMENT.md). Full investigation gameplay is still in development.
+The Case 01 core loop includes archive/overview, people, evidence, timeline, route analysis, a saved board/notes, gated research/interviews and final reconstruction. Automated API/PostgreSQL/browser checks cover the case-to-epilogue flow. See [development setup and validation](docs/DEVELOPMENT.md). Human playtime, visuals/audio, deployment hardening and Azure deployment are still pending.
