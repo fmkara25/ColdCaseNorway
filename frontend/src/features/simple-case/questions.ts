@@ -40,7 +40,7 @@ export const questions: Record<string, Question> = {
   },
   mileage: {
     title: "Hvor mye av kjøringen mangler en forklaring?",
-    source: "Kjørebok for bil 14 · 44 km. Registrert arbeidsoppdrag · ca. 12 km.",
+    source: "Kjørebok for bil 14 · Lars Viken står oppført som fører · 44 km. Registrert arbeidsoppdrag · ca. 12 km.",
     step: 4,
     choices: [
       { label: "Omtrent 32 km", feedback: "Omtrent 32 km mangler støtte i arbeidsordren. Prøv forklaringen mot vaktloggen.", next: "claim" },
@@ -49,7 +49,7 @@ export const questions: Record<string, Question> = {
   },
   claim: {
     title: "Hva støtter vaktloggen?",
-    source: "Lars nevner en mulig ekstra utrykning. Vaktloggen og arbeidsordrene viser ingen registrert ekstrajobb. En kvittering viser et kjøp kl. 22.52.",
+    source: "Lars nevner en mulig ekstra utrykning. Vaktloggen og arbeidsordrene viser ingen registrert ekstrajobb. Kvitteringen kl. 22.52 viser blant annet spylervæske og tørkepapir. Senere ble bilen sett uvanlig ren, med en skade foran til høyre.",
     step: 5,
     choices: [
       { label: "Det ekstra oppdraget er ubekreftet", feedback: "Ja. Kvitteringen viser et kjøp, men dokumenterer ikke et oppdrag.", next: "decision" },
