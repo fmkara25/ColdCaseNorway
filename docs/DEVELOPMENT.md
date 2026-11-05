@@ -226,3 +226,11 @@ Unit tests cover per-person filtering, approach/legacy history and unchanged evi
 After an explicit board save, a separate progress GET displays newly available server-authorized questions/research as navigation links. It never executes an action or chooses an interview approach. A version-matching cached baseline is required to call an option new; otherwise the receipt says available. Older progress reads are cancelled before the post-save read. A failed followup read keeps the successful board write and offers a read-only retry. Editing or reloading dismisses the receipt. The bounded receipt scrolls internally so the main workstation stays fixed.
 
 Acceptance coverage: `frontend/e2e/board-followup.spec.ts` checks the Maria note connection, no automatic question/history change, narrow-screen overflow, and saved-note retention with a failed progress read and no duplicate PUT on retry. Browser/PostgreSQL execution requires the CI environment or the documented local test stack.
+
+### Timeline-to-map time assumptions
+
+Two selected timed timeline entries can be carried to the map via repeated `timeCard` query parameters. The map resolves exactly two distinct IDs against its authorized timeline response and computes their absolute difference; labels and numeric URL values are never trusted. Unknown/locked/untimed pairs do not populate a time window. Approximate and planned markers plus source links remain visible. This is a comparison of entries, not proof of travel; there is no inferred overnight rollover or automatic route selection.
+
+A player can edit or clear the interval, and explicitly restore the source-derived value. A failed timeline read leaves route tools and manual intervals usable; retry preserves manual input. Selected card IDs survive refresh in the link; manual overrides, mode and stop time retain the existing nonpersistent behavior. Route drafts retain the existing local persistence. No progress/review/action writes are added.
+
+Coverage: timeline unit tests cover invalid/hidden IDs, untimed/duplicate pairs and zero minutes. `frontend/e2e/map-time-window.spec.ts` covers handoff on desktop/mobile, approximation/planned provenance, route retention, manual override/reset, URL injection, failed reads/retry, and unchanged investigation progress. Full browser execution requires CI or the local test stack.

@@ -40,6 +40,9 @@
 .route-console .route-input { display:grid; gap:7px; font-size:11px; margin:14px 0; }
 .route-console .route-input input { padding:9px 12px; font-size:14px; }
 .route-console .route-assumption-note { font-size:10px; color:#aaa795; }
+.route-time-source { border-left:2px solid #c8b18b; padding:0 0 0 12px; overflow-wrap:anywhere; }
+.route-time-source a { color:#d3bd92; }
+.route-time-source button { padding:7px 10px; font-size:11px; }
 .route-verdict { min-width:0; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:24px; align-items:center; border:1px solid #6d644f; background:#1b2227; padding:16px 22px; }
 .route-verdict .route-result { margin:0; padding:0; border:0; background:transparent; min-width:0; }
 .route-verdict .route-result strong { font:28px Georgia,serif; color:#dfc18a; }
