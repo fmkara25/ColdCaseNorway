@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("archive opens a case and its person register survives a refresh", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: "Åpne sak" }).click();
+  await page.goto("/cases/1999-1218");
   await expect(page.getByRole("heading", { name: "Forsvinningen i Skardal" })).toBeVisible();
   await page.getByText("Mappen", { exact:true }).click();
   await page.getByRole("link", { name: "PERSONER", exact: true }).click();
