@@ -42,6 +42,20 @@ for (const phoneFirst of [false, true]) {
     await expect(page.getByRole("heading", { name: "Kjøretøysporet åpnes" })).toBeVisible();
     await page.reload();
     await expect(page.getByRole("heading", { name: "Kjøretøysporet åpnes" })).toBeVisible();
+    await page.getByRole("button", { name: "Søk i selskapsarkivet" }).click();
+    await page.getByRole("button", { name: "Velg som grunnlag: Kjørebok: bil 14", exact: true }).click();
+    await page.getByRole("button", { name: "Velg som grunnlag: Arbeidsordren", exact: true }).click();
+    const distance = page.getByLabel("Uforklart kjørelengde (km)");
+    await distance.fill("44");
+    await page.getByRole("button", { name: "Vurder kjørelengden" }).click();
+    await expect(page.getByText(/Trekk så fra strekningen/)).toBeVisible();
+    expect((await (await page.request.get(progress)).json()).history.some((item: { id: string }) => item.id === "mileage")).toBe(false);
+    await distance.fill("32");
+    await page.getByRole("button", { name: "Vurder kjørelengden" }).click();
+    await page.getByRole("button", { name: "Be Lars forklare avviket" }).click();
+    await expect(page.getByRole("heading", { name: "En mulig utrykning" })).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "En mulig utrykning" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }

@@ -44,6 +44,7 @@ export function OpeningPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [hint, setHint] = useState("");
   const [showInference, setShowInference] = useState(false);
+  const [kilometres, setKilometres] = useState("");
   const [showPhone, setShowPhone] = useState(false);
   const command = useMutation({
     mutationFn: (work: () => Promise<unknown>) => work(),
@@ -76,8 +77,11 @@ export function OpeningPage() {
   const note = !!history("find-note");
   const readyToInterview = state.actions.find(item => item.id === "maria-plan");
   const checkedRoute = history("erik-route");
-  const stage = checkedRoute ? 5 : openedMarket ? 4 : spoke ? 3 : note ? 2 : 1;
-  const heading = ["Velg ditt første spor", "Samtalen med Maria", "En plan eller en reise?", "Nytt spor ved butikken", "Kjøretøysporet åpnes"][stage - 1];
+  const companyRecords = history("company-records");
+  const mileage = history("mileage");
+  const mileageReply = history("lars-mileage");
+  const stage = mileageReply ? 7 : companyRecords ? 6 : checkedRoute ? 5 : openedMarket ? 4 : spoke ? 3 : note ? 2 : 1;
+  const heading = ["Velg ditt første spor", "Samtalen med Maria", "En plan eller en reise?", "Nytt spor ved butikken", "Kjøretøysporet åpnes", "Kjøreboken for bil 14", "En mulig utrykning"][stage - 1];
   const shown = source(inspect ?? "");
   function card(id: string, select = false) {
     const item = source(id);
@@ -99,7 +103,7 @@ export function OpeningPage() {
       <span>SKARDAL · 18. DESEMBER 1999</span>
     </div>
     <div className="opening-work">
-      <p className="eyebrow" role="status">ETTERFORSKNING · {stage} / 5</p>
+      <p className="eyebrow" role="status">ETTERFORSKNING · {stage} / 7</p>
       <h1>{heading}</h1>
       <fieldset disabled={command.isPending}>
         {stage === 1 && <>
@@ -166,6 +170,41 @@ export function OpeningPage() {
         {stage === 5 && <>
           <p>{checkedRoute?.response}</p>
           <p>Du kan nå sammenholde kjøretøybeskrivelsen med selskapsarkivet.</p>
+          <button onClick={() => run(() => act("company-records"))}>Søk i selskapsarkivet</button>
+        </>}
+        {stage === 6 && <>
+          <p>En bil i selskapsarkivet passer med beskrivelsen. Hvor mye av kjøringen står uten forklaring i arbeidsordren?</p>
+          <div className="opening-cards">{card("vehicle-log", !mileage)}{card("work-order", !mileage)}</div>
+          {!mileage ? <form onSubmit={event => {
+            event.preventDefault();
+            if (!selected.includes("vehicle-log") || !selected.includes("work-order")) return;
+            if (Number(kilometres) !== 32) {
+              setHint("Finn først forskjellen mellom start- og sluttstanden. Trekk så fra strekningen i arbeidsordren.");
+              return;
+            }
+            run(async () => {
+              await review("vehicle-log", "work-order");
+              await pair(caseId, "evidence:vehicle-log", "evidence:work-order", "Kjøring uten registrert oppdrag");
+              await act("mileage");
+            });
+          }}>
+            <p>Velg begge kildene som grunnlag for beregningen.</p>
+            <label>Uforklart kjørelengde (km)<br />
+              <input type="number" min={0} step={1} required value={kilometres} onChange={event => setKilometres(event.target.value)} />
+            </label>
+            <button disabled={!selected.includes("vehicle-log") || !selected.includes("work-order")}>Vurder kjørelengden</button>
+          </form> : <>
+            <p>{mileage.response}</p>
+            <button onClick={() => run(async () => {
+              await review("lars-statement");
+              await pair(caseId, "person:lars", "evidence:vehicle-log", "Spør om kjørelengden");
+              await act("lars-mileage");
+            })}>Be Lars forklare avviket</button>
+          </>}
+        </>}
+        {stage === 7 && <>
+          <p className="opening-reply">{mileageReply?.response}</p>
+          {card("emergency-claim")}
           <Link className="primary-button" to={root}>Tilbake til saksoversikten ↗</Link>
         </>}
       </fieldset>
