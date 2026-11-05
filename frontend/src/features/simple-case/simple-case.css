@@ -173,3 +173,5 @@
 @media (prefers-reduced-motion: reduce) {
   .simple-case *, .simple-case *::before { animation: none !important; transition: none !important; }
 }
+.simple-case h1:focus { outline: none; }
+.simple-source .archive-image figcaption { color: #514938; }
