@@ -84,11 +84,11 @@ export function OpeningPage() {
       <button type="button" onClick={() => setInspect(inspect === id ? undefined : id)} aria-expanded={inspect === id}>
         <small>{item.kind}</small>{item.title}
       </button>
-      {select && <button type="button" aria-pressed={selected.includes(id)} onClick={() => {
+      {select && <button type="button" aria-label={`Velg som grunnlag: ${item.title}`} aria-pressed={selected.includes(id)} onClick={() => {
         setShowInference(false);
         setHint("");
         setSelected(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
-      }}>Velg som grunnlag<span className="sr-only">: {item.title}</span></button>}
+      }}>Velg som grunnlag</button>}
     </div>;
   }
 
