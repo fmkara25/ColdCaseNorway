@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { ArchiveImage } from "../../components/ArchiveImage";
@@ -88,13 +88,17 @@ export function SimpleCasePage() {
     (save.screen === "decision" ? "Hvem mener du er ansvarlig?" :
       save.verdict?.correct ? "Du fant den ansvarlige" : "Du valgte feil person");
 
-  return <main id="main-content" tabIndex={-1} className="simple-case">
+  const progressValue = question ? step : save.screen === "file" ? 0 : save.screen === "decision" ? totalQuestions + 1 : totalQuestions + 2;
+  const progressMax = totalQuestions + 2;
+
+  return <main id="main-content" tabIndex={-1} className="simple-case" data-scene={save.screen}>
     <header className="simple-header"><Link to="/">Cold Case Norway</Link><span>Sak 1999–1218</span></header>
     {!file.isSuccess || !evidence.isSuccess ? <Feedback error={file.error ?? evidence.error}
       retry={() => { void file.refetch(); void evidence.refetch(); }} /> : <>
       <div className="simple-progress" aria-label="Fremdrift">
         <span>{question ? `Etterforskning · ${step} av ${totalQuestions}` : save.screen === "file" ? "Saksmappe" : save.screen === "decision" ? "Din avgjørelse" : "Resultat"}</span>
-        <progress aria-label="Fremdrift i saken" max={totalQuestions + 2} value={question ? step : save.screen === "file" ? 0 : save.screen === "decision" ? totalQuestions + 1 : totalQuestions + 2} />
+        <progress className="sr-only" aria-label="Fremdrift i saken" max={progressMax} value={progressValue} />
+        <div className="simple-progress-track" aria-hidden="true" style={{ "--case-progress": progressValue / progressMax } as CSSProperties}><span /></div>
       </div>
       <h1 ref={heading} tabIndex={-1}>{title}</h1>
       {save.screen === "file" && <>
@@ -109,17 +113,17 @@ export function SimpleCasePage() {
         <button className="simple-primary" onClick={() => update({ screen: "ticket" })}>Start etterforskningen</button>
       </>}
       {question && <div className="simple-question" key={save.screen}>
-        <figure className="simple-source">
+        <div className="simple-source">
           <span>{question.evidenceId ? ticket?.title ?? "Saksdokument" : "Fra saksdokumentene"}</span>
           {question.image && <ArchiveImage src={question.image} name={question.imageName ?? ""} landscape={save.screen === "witness"} compact={save.screen !== "witness"} />}
           {exhibit && <dl className="simple-exhibit">{exhibit.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>}
           <CaseDiagram scene={save.screen} />
           <blockquote>{question.source}</blockquote>
-        </figure>
+        </div>
         <div className="simple-choices">
           {question.choices.map((option, index) => <button key={option.label} aria-pressed={save.answer === index}
             disabled={!!choice} onClick={() => update({ ...save, answer: index })}>{option.label}</button>)}
-          {choice && <><p role="status">{choice.feedback}</p><button className="simple-primary" onClick={() => {
+          {choice && <><p className="simple-reaction" role="status">{choice.feedback}</p><button className="simple-primary" onClick={() => {
             const visited = [...(save.visited ?? []), save.screen];
             update({ screen: nextQuestion(save.screen, choice.next, visited), visited });
           }}>Fortsett</button></>}
@@ -148,11 +152,11 @@ export function SimpleCasePage() {
         {pending && <p className="simple-wait" role="status">Vurderer avgjørelsen …</p>}
         {error && <p role="alert">{error}</p>}
       </div>}
-      {save.screen === "result" && save.verdict && <div className="simple-result">
+      {save.screen === "result" && save.verdict && <div className="simple-result" data-correct={save.verdict.correct}>
         <p>Du valgte <strong>{suspects.find(person => person.id === save.suspect)?.name}</strong>.</p>
         {save.evidence && <p>Din valgte kilde: {save.evidence}.</p>}
         {typeof save.verdict.eventCorrect === "boolean" && <p>{save.verdict.eventCorrect ? "Du identifiserte også hva som utløste hendelsen." : "Teorien din om hva som utløste hendelsen, passer ikke med rekonstruksjonen."}</p>}
-        <figure className="simple-ending-image"><ArchiveImage src={file.data.coverImagePath} name={file.data.location} landscape /></figure>
+        <div className="simple-ending-image"><ArchiveImage src={file.data.coverImagePath} name={file.data.location} landscape /></div>
         <p>{save.verdict.explanation}</p>
         <button className="simple-primary" onClick={() => update(initial)}>Spill på nytt</button>
       </div>}
