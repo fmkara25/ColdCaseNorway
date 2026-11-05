@@ -18,6 +18,9 @@ export function MapPage() {
     queryFn:({ signal }) => fetchJson<TimelineEvent[]>(`/api/cases/${encodeURIComponent(caseId)}/timeline`, signal, isTimeline) });
   const imported = timeline.isSuccess ? resolveTimeWindow(timeIds, timeline.data) : null;
   const query = useQuery({ queryKey:["cases", caseId, "map"], queryFn:({ signal }) => fetchJson<MapGraph>(`/api/cases/${encodeURIComponent(caseId)}/map`, signal, isMapGraph) });
+  const timelineSearch = new URLSearchParams();
+  imported?.events.forEach(event => timelineSearch.append("timeCard", event.id));
+  const timelineLink = imported ? `../timeline?${timelineSearch}` : "../timeline";
   const path = useTheoryStore(state => state.routes[caseId] ?? emptyRoute);
   const setRoute = useTheoryStore(state => state.setRoute);
   const setPath = (next:string[]) => setRoute(caseId, next);
@@ -42,7 +45,7 @@ export function MapPage() {
   const message = estimate ? compareWindow(min, max, available === "" ? null : Number(available)) : "";
   const count = Math.max(1, Math.ceil(graph.locations.length / 4));
   const current = Math.min(page, count - 1);
-  return <section className="route-stage" aria-label="Ruteverksted"><header className="route-heading"><div><p className="eyebrow">STED · REKKEFØLGE · MULIGHET</p><h1>Kart</h1></div><p>Skardal er fiktivt. Kartet er skjematisk; avstandene gjelder veinettet.</p><Link to="../timeline">Undersøk tidspunktene ↗</Link></header>
+  return <section className="route-stage" aria-label="Ruteverksted"><header className="route-heading"><div><p className="eyebrow">STED · REKKEFØLGE · MULIGHET</p><h1>Kart</h1></div><p>Skardal er fiktivt. Kartet er skjematisk; avstandene gjelder veinettet.</p><Link to={timelineLink}>Undersøk tidspunktene ↗</Link></header>
     <div className="route-workspace"><MapCanvas graph={graph} path={path} append={append} canAppend={canAppend}/>
       <section className="route-console" aria-label="Ruteplanlegger"><nav className="route-steps" aria-label="Arbeid med ruten"><button aria-pressed={step === "route"} onClick={() => setStep("route")}>1 · Velg steder</button><button aria-pressed={step === "time"} onClick={() => setStep("time")}>2 · Prøv tidsrommet</button></nav>
         <div className="route-console-scroll" tabIndex={0} role="region" aria-label={step === "route" ? "Stedsvalg og ruterekkefølge" : "Forutsetninger for tidsanslaget"}>

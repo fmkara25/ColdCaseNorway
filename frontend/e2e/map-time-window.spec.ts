@@ -38,6 +38,11 @@ test("timeline carries source-backed assumptions to map without choosing a route
     await page.reload();
     await expect(page.getByLabel("Tilgjengelig tidsrom, minutter", {exact:true})).toHaveValue("34");
     await expect(page.locator(".route-result")).toContainText("0,8 km");
+    await page.getByRole("link", { name:"Undersøk tidspunktene ↗", exact:true }).click();
+    await expect(page.getByRole("heading", { name:"34 minutter mellom oppføringene", exact:true })).toBeVisible();
+    await expect(page.getByRole("button", { name:"Sammenlign Sett ved butikken", exact:true })).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name:/Fjern Sett ved butikken/ }).click();
+    await expect(page.getByRole("link", { name:"Prøv tidsrommet på kartet ↗", exact:true })).toHaveCount(0);
   }
   const after = await (await page.request.get(api + "/investigation/progress")).json();
   expect(after).toEqual(before);
