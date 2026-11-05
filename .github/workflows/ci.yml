@@ -108,8 +108,9 @@ jobs:
           export ConnectionStrings__ColdCase='Host=database;Database=coldcase_hosted_ci;Username=coldcase'
           docker run --rm --network coldcase-ci_default -e ConnectionStrings__ColdCase -e PGPASSWORD coldcase-hosted-ci --ColdCase:Initialize=true
           docker run -d --name coldcase-hosted-ci --network coldcase-ci_default -e ConnectionStrings__ColdCase -e PGPASSWORD -p 127.0.0.1:8081:8080 coldcase-hosted-ci
-          trap 'docker rm -f coldcase-hosted-ci >/dev/null' EXIT
-          curl --fail --retry 15 --retry-connrefused --retry-delay 2 -sS http://localhost:8081/api/cases | python3 -c 'import json,sys; assert any(case["id"] == "1999-1218" for case in json.load(sys.stdin))'
+          trap 'status=$?; if [ "$status" -ne 0 ]; then docker logs coldcase-hosted-ci; fi; docker rm -f coldcase-hosted-ci >/dev/null' EXIT
+          curl --fail --retry 15 --retry-all-errors --retry-delay 2 --max-time 5 -sS http://localhost:8081/api/health >/dev/null
+          curl -fsS http://localhost:8081/api/cases | python3 -c 'import json,sys; assert any(case["id"] == "1999-1218" for case in json.load(sys.stdin))'
           curl -fsS http://localhost:8081/play/1999-1218 | grep -q 'id="root"'
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/api/missing)" = 404
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/openapi/v1.json)" = 404
