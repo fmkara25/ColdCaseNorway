@@ -6,6 +6,7 @@ import { fetchJson } from "../cases/api";
 import { Feedback } from "../cases/CasePages";
 import { isEvidenceList, type Evidence } from "../evidence/api";
 import { progressCommand, readProgress, useProgress } from "../investigation/progress";
+import { ErikRoute } from "./ErikRoute";
 import "./opening.css";
 
 async function pair(caseId: string, fromId: string, toId: string, label: string) {
@@ -74,8 +75,9 @@ export function OpeningPage() {
   const spoke = history("maria-plan");
   const note = !!history("find-note");
   const readyToInterview = state.actions.find(item => item.id === "maria-plan");
-  const stage = openedMarket ? 4 : spoke ? 3 : note ? 2 : 1;
-  const heading = ["Velg ditt første spor", "Samtalen med Maria", "En plan eller en reise?", "Nytt spor ved butikken"][stage - 1];
+  const checkedRoute = history("erik-route");
+  const stage = checkedRoute ? 5 : openedMarket ? 4 : spoke ? 3 : note ? 2 : 1;
+  const heading = ["Velg ditt første spor", "Samtalen med Maria", "En plan eller en reise?", "Nytt spor ved butikken", "Kjøretøysporet åpnes"][stage - 1];
   const shown = source(inspect ?? "");
   function card(id: string, select = false) {
     const item = source(id);
@@ -97,7 +99,7 @@ export function OpeningPage() {
       <span>SKARDAL · 18. DESEMBER 1999</span>
     </div>
     <div className="opening-work">
-      <p className="eyebrow" role="status">ETTERFORSKNING · {stage} / 4</p>
+      <p className="eyebrow" role="status">ETTERFORSKNING · {stage} / 5</p>
       <h1>{heading}</h1>
       <fieldset disabled={command.isPending}>
         {stage === 1 && <>
@@ -155,7 +157,15 @@ export function OpeningPage() {
         </>}
         {stage === 4 && <>
           <p>Reiseplanen er undersøkt. Et nytt vitnespor knytter et kjøretøy til observasjonen ved butikken.</p>
-          {card("vehicle-witness")}
+          <div className="opening-cards">{card("vehicle-witness")}{card("erik-phone")}</div>
+          <ErikRoute caseId={caseId} submit={route => run(async () => {
+            await review("vehicle-witness", "erik-phone");
+            await progressCommand(caseId, "actions/erik-route", route);
+          })} />
+        </>}
+        {stage === 5 && <>
+          <p>{checkedRoute?.response}</p>
+          <p>Du kan nå sammenholde kjøretøybeskrivelsen med selskapsarkivet.</p>
           <Link className="primary-button" to={root}>Tilbake til saksoversikten ↗</Link>
         </>}
       </fieldset>

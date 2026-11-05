@@ -32,3 +32,8 @@
   .opening-stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(65px, 22%) minmax(0, 1fr); }
   .opening-image { padding: 8px; }
 }
+.opening-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.opening-times > div { background: #daceb6; color: #192329; padding: 10px; }
+.opening-route .case-map { width: 100%; height: 210px; }
+.opening-route .map-toolbar button { width: auto; display: inline-block; }
+.opening-route .map-toolbar { flex-wrap: wrap; }

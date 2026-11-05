@@ -32,6 +32,16 @@ for (const phoneFirst of [false, true]) {
     await page.reload();
     await expect(page.getByRole("heading", { name: "Nytt spor ved butikken" })).toBeVisible();
     expect((await (await page.request.get(progress)).json()).history.some((item: { id: string }) => item.id === "witness-followup")).toBe(true);
+    await page.getByRole("button", { name: "Legg til Butikken i ruten", exact: true }).click();
+    await page.getByRole("button", { name: "Legg til Telefonstedet i ruten", exact: true }).click();
+    await expect(page.getByText(/Anslått kjøretid i vinterføre: 22–30 minutter/)).toBeVisible();
+    await page.getByRole("button", { name: "Ja, tidspunktene passer med ruten." }).click();
+    await expect(page.getByText(/Sammenlign tidsrommet mellom kortene/)).toBeVisible();
+    expect((await (await page.request.get(progress)).json()).history.some((item: { id: string }) => item.id === "erik-route")).toBe(false);
+    await page.getByRole("button", { name: "Nei, tidsrommet virker for kort for denne ruten." }).click();
+    await expect(page.getByRole("heading", { name: "Kjøretøysporet åpnes" })).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Kjøretøysporet åpnes" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
