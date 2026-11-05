@@ -37,6 +37,7 @@ test("a third time replaces the oldest selection and removing a card clears the 
   await expect(page.getByRole("heading", { name:"34 minutter mellom oppføringene" })).toBeVisible();
   await page.getByRole("button", { name:"Fjern Sett ved butikken fra sammenligningen", exact:true }).click();
   await expect(page.getByRole("heading", { name:"Sammenlign to tidspunkter", exact:true })).toBeVisible();
+  await expect(page.getByRole("link", { name:"Prøv tidsrommet på kartet ↗", exact:true })).toHaveCount(0);
   const timeline = await (await page.request.get("/api/cases/1999-1218/timeline")).json();
   expect(timeline.some((item:{ id:string }) => item.id === "station-payment")).toBe(false);
   await expect(page.locator("body")).not.toContainText("Betaling ved Skardal Nord");

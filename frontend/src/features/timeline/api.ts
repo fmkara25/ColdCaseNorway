@@ -22,3 +22,13 @@ export function elapsedMinutes(first: TimelineEvent, second: TimelineEvent): num
   if (first.minuteOfDay === null || second.minuteOfDay === null) return null;
   return Math.abs(second.minuteOfDay - first.minuteOfDay);
 }
+
+// Resolve IDs against the authorized timeline rather than trusting URL labels or minutes.
+export function resolveTimeWindow(ids: string[], events: TimelineEvent[]) {
+  if (ids.length !== 2 || ids[0] === ids[1]) return null;
+  const first = events.find(event => event.id === ids[0]);
+  const second = events.find(event => event.id === ids[1]);
+  if (!first || !second) return null;
+  const minutes = elapsedMinutes(first, second);
+  return minutes === null ? null : { events: [first, second], minutes };
+}
