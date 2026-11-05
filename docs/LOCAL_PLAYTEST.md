@@ -35,6 +35,25 @@ The first build downloads SDK/runtime images and npm dependencies and can take s
 
 If port 8080 is occupied, add `COLDCASE_PORT=8081` to `.env`, rerun the command and open http://localhost:8081. PostgreSQL retains its existing loopback port 5432. Stop a conflicting local PostgreSQL instance rather than deleting data. The app port binds only to loopback, and the API has no published host port. This is intended for your own computer, not access from another device.
 
+## First uninterrupted playthrough
+
+Ask a Bokmål reader who has not seen the solution or the developer tests to play. Use a fresh browser profile on the same localhost address so the tester starts a separate investigation and the existing save remains available in the original profile. Keep the fresh profile if the tester wants to resume later.
+
+Start timing when the player opens the case. Stop at the ending or when they decide to stop. Pause the timer for breaks and technical setup. Let the player choose their own path through the case. If they ask for help, record what they were trying to do before offering a hint, and record any hint separately.
+
+After playing, share a short report using this template:
+
+| Field | What to record |
+| --- | --- |
+| Build and device | Git commit, browser and screen size |
+| Active play time | Minutes, excluding breaks |
+| Result | Finished unaided, finished with help, or stopped and where |
+| First point of friction | Approximate minute, screen, intended action, and what happened |
+| Confidence in the conclusion | Which sources supported it and which connection felt unclear |
+| Comfort | Any issue with reading, navigation, sound or layout |
+
+Use `git rev-parse --short HEAD` in the repository to identify the build. Keep solution details out of public reports. Compare active time with the 45–60 minute target together with where the time went. Record time spent reasoning separately from time spent searching for a control or recovering from an error when possible. One playthrough provides an observation, not a duration estimate for all players.
+
 ## Stop, resume and troubleshoot
 
 ```powershell
