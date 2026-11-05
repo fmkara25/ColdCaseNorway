@@ -234,3 +234,9 @@ Two selected timed timeline entries can be carried to the map via repeated `time
 A player can edit or clear the interval, and explicitly restore the source-derived value. A failed timeline read leaves route tools and manual intervals usable; retry preserves manual input. Selected card IDs survive refresh in the link; manual overrides, mode and stop time retain the existing nonpersistent behavior. Route drafts retain the existing local persistence. No progress/review/action writes are added.
 
 Coverage: timeline unit tests cover invalid/hidden IDs, untimed/duplicate pairs and zero minutes. `frontend/e2e/map-time-window.spec.ts` covers handoff on desktop/mobile, approximation/planned provenance, route retention, manual override/reset, URL injection, failed reads/retry, and unchanged investigation progress. Full browser execution requires CI or the local test stack.
+
+### Reusing the map draft in research
+
+Route-dependent research can explicitly copy the current case's local map draft. All stops, including repeated visits, are retained in order and displayed using authorized map names. The client checks each leg for connectivity (2–24 stops); the existing server action rule remains authoritative about whether this route supports the particular claim. Copying a draft does not submit an action, change the map draft, or mark evidence reviewed. Players can return to the two-place selector. Rejection retains the selected route and the local map draft.
+
+`frontend/e2e/desk-route-draft.spec.ts` exercises a three-stop rejected route, no automatic submission, subsequent accepted route, unchanged progress on rejection, desktop/mobile layout and draft retention. The map unit test covers repeated visits, disconnected/hidden places and the stop limit. Story, database and API contracts are unchanged.

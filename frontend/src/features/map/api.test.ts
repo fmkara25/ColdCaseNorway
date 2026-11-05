@@ -1,8 +1,17 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { compareWindow, estimateRoute, isMapGraph, isRouteEstimate } from "./api";
+import { compareWindow, estimateRoute, isConnectedRoute, isMapGraph, isRouteEstimate } from "./api";
 const estimate = { meters: 800, walkMinutesMin: 10, walkMinutesMax: 14, driveMinutesMin: 2, driveMinutesMax: 4 };
 const graph = { locations: [{ id: "hotel", name: "Hotell", description: "Arbeidssted", x: 10, y: 20 }, { id: "market", name: "Butikk", description: "Observasjon", x: 50, y: 60 }], roads: [{ ...estimate, id: "road", fromLocationId: "hotel", toLocationId: "market" }] };
 afterEach(() => vi.unstubAllGlobals());
+it("checks every route leg against authorized places and roads while preserving repeated visits", () => {
+  expect(isConnectedRoute(["hotel", "market", "hotel"], graph)).toBe(true);
+  expect(isConnectedRoute(["hotel", "hotel"], graph)).toBe(false);
+  expect(isConnectedRoute(["hotel", "hidden"], graph)).toBe(false);
+  expect(isConnectedRoute(["hotel"], graph)).toBe(false);
+  expect(isConnectedRoute(Array.from({length:25}, (_, i) => i % 2 ? "market" : "hotel"), graph)).toBe(false);
+  const disconnected = {...graph, locations:[...graph.locations, {...graph.locations[0], id:"other"}]};
+  expect(isConnectedRoute(["hotel", "market", "other"], disconnected)).toBe(false);
+});
 it("rejects dangling roads, duplicate places and impossible travel intervals", () => {
   expect(isMapGraph(graph)).toBe(true);
   expect(isMapGraph({ ...graph, locations: [graph.locations[0]] })).toBe(false);

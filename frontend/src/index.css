@@ -424,6 +424,8 @@ button:disabled { cursor:default; opacity:.55; }
 .action-panel p { font-size:13px; line-height:1.85; }
 .action-panel a { color:#d0b17a; text-decoration:underline; }
 .action-option { padding:16px 0; border-top:1px solid #394550; }
+.action-option>a { display:block; margin-bottom:12px; }
+.action-option>section { margin:12px 0; padding:0 12px; border-left:2px solid #bca273; }
 .action-option button,.action-panel>div[role=alert] button { padding:10px 14px; font-size:12px; text-align:left; }
 .action-option label { font-size:12px; display:block; margin:12px 0; }
 .action-option select { display:block; width:100%; max-width:400px; background:#101820; color:#e2e6e9; border:1px solid #52606c; padding:9px; margin:7px 0 15px; }
