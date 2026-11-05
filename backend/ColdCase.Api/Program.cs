@@ -98,6 +98,7 @@ app.MapCaseMapEndpoints();
 app.MapInvestigationEndpoints();
 app.MapGameplayEndpoints();
 app.MapReconstructionEndpoints();
+app.MapVerdictEndpoints();
 app.Run();
 
 public partial class Program { }

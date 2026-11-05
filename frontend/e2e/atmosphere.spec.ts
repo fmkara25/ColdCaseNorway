@@ -5,7 +5,7 @@ test("archive illustrations load, stay consistent and fail gracefully", async ({
   const cover = page.getByRole("img", { name: "Illustrasjon: Skardal, Trøndelag" });
   await expect(cover).toBeVisible();
   await expect.poll(() => cover.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-  await page.getByRole("link", { name: "Åpne sak" }).click();
+  await page.goto("/cases/1999-1218");
   const portrait = page.getByRole("img", { name: "Illustrasjon: Ingrid Solberg" });
   await expect(portrait).toBeVisible();
   await expect.poll(() => portrait.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
