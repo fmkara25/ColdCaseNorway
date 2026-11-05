@@ -8,6 +8,7 @@ import { fetchJson } from "../cases/api";
 import { Feedback } from "../cases/CasePages";
 import { isPeople, type Person } from "../people/api";
 import { isEvidenceList, type Evidence } from "../evidence/api";
+import { readProgress, type Progress, type CaseAction } from "../investigation/progress";
 import { canConnect, openInvestigation, removeCard, saveBoard, type BoardSnapshot, type BoardState } from "./api";
 
 export function BoardPage({ notesOnly = false }: { notesOnly?: boolean }) {
@@ -52,16 +53,29 @@ function BoardEditor({ caseId, initial, people, evidence, notesOnly, reload }: {
   const [zoom, setZoom] = useState(() => window.matchMedia("(max-width: 800px)").matches ? .75 : 1);
   const [pan, setPan] = useState({ x: 20, y: 20 });
   const drag = useRef<{ id?: string; x: number; y: number; startX: number; startY: number } | null>(null);
+  const [followup, setFollowup] = useState<{ state: "loading" | "error" | "ready"; baseline?: string[]; actions: CaseAction[] }>();
+  async function refreshFollowup(baseline?: string[]) {
+    setFollowup({ state: "loading", baseline, actions: [] });
+    try {
+      // Discard an older in-flight read; this GET must start after the board write.
+      await client.cancelQueries({ queryKey: ["progress", caseId] });
+      const progress = await readProgress(caseId);
+      client.setQueryData(["progress", caseId], progress);
+      setFollowup({ state: "ready", baseline, actions: progress.actions.filter(action => !baseline?.includes(action.id)) });
+    } catch { setFollowup({ state: "error", baseline, actions: [] }); }
+  }
+  const previousActions = useRef<string[] | undefined>(undefined);
   const mutation = useMutation({ mutationFn: (snapshot: BoardSnapshot) => saveBoard(caseId, snapshot), onSuccess: snapshot => {
-    setDraft(snapshot); setDirty(false); client.setQueryData(["investigation", caseId], snapshot); void client.invalidateQueries({ queryKey: ["progress", caseId] });
+    setDraft(snapshot); setDirty(false); client.setQueryData(["investigation", caseId], snapshot);
+    void refreshFollowup(previousActions.current);
   } });
   const board = draft.board;
-  const busy = mutation.isPending || loading;
+  const busy = mutation.isPending || loading || followup?.state === "loading";
   const sources = [...people.map(p => ({ id: `person:${p.id}`, title: p.name, description: p.role, url: `../people/${encodeURIComponent(p.id)}` })),
     ...evidence.map(e => ({ id: `evidence:${e.id}`, title: e.title, description: e.kind, url: `../evidence/${encodeURIComponent(e.id)}` })),
     ...board.notes.map(n => ({ id: `note:${n.id}`, title: "Eget notat", description: n.text, url: "" }))];
   const source = (id: string) => sources.find(s => s.id === id);
-  const edit = (update: (current: BoardState) => BoardState) => { if (!busy) { setDraft(current => current ? { ...current, board: update(current.board) } : current); setDirty(true); mutation.reset(); } };
+  const edit = (update: (current: BoardState) => BoardState) => { if (!busy) { setFollowup(undefined); setDraft(current => current ? { ...current, board: update(current.board) } : current); setDirty(true); mutation.reset(); } };
   const positionForNewCard = () => ({ x:40 + (board.positions.length % 8) * 240, y:40 + Math.floor(board.positions.length / 8) * 220 });
   const addReference = (id:string) => { if (!busy && board.positions.length < 128 && sources.some(item => item.id === id) && !board.positions.some(p => p.id === id)) edit(current => ({ ...current, positions:[...current.positions, { id, ...positionForNewCard() }] })); };
   function chooseConnection(id:string) { setTool("connections"); if (!from || to || from === id) { setFrom(id); setTo(""); } else setTo(id); }
@@ -70,14 +84,24 @@ function BoardEditor({ caseId, initial, people, evidence, notesOnly, reload }: {
       <h2>Du har ulagrede endringer</h2><p>Fortsett å redigere for å lagre tavlen, eller forlat siden uten å lagre.</p><div className="document-toolbar"><button onClick={() => { if (blocker.state === "blocked") blocker.reset(); }}>Fortsett å redigere</button><button onClick={() => { if (blocker.state === "blocked") blocker.proceed(); }}>Forlat uten å lagre</button></div>
     </dialog>
     <header className="board-stage-heading"><div><p className="eyebrow">FORBINDELSER OG HYPOTESER</p><h1>{notesOnly ? "Notater" : "Tavle"}</h1></div><p>En forbindelse er din hypotese. Den er ikke et bevist faktum.</p></header>
-    <div className="board-savebar"><button disabled={!dirty || busy} onClick={() => mutation.mutate(draft)}>{mutation.isPending ? "Lagrer …" : "Lagre tavlen"}</button><span role="status">{dirty ? "Ulagrede endringer" : hasUnsaved ? "Tekst ikke lagt til" : "Lagret"}</span>
+    <div className="board-savebar"><button disabled={!dirty || busy} onClick={() => {
+      const progress = client.getQueryData<Progress>(["progress", caseId]);
+      previousActions.current = progress?.version === draft.version ? progress.actions.map(action => action.id) : undefined;
+      setFollowup(undefined); mutation.mutate(draft);
+    }}>{mutation.isPending ? "Lagrer …" : "Lagre tavlen"}</button><span role="status">{dirty ? "Ulagrede endringer" : hasUnsaved ? "Tekst ikke lagt til" : "Lagret"}</span>
       <button disabled={busy} onClick={async () => {
         if (hasUnsaved && !window.confirm("Ulagrede endringer vil bli forkastet. Vil du hente den lagrede tavlen?")) return;
-        setLoading(true); setLoadError(false);
+        setLoading(true); setLoadError(false); setFollowup(undefined);
         try { const fresh = await reload(); if (fresh) { setDraft(fresh); setDirty(false); setNoteText(""); setLabel(""); mutation.reset(); } else setLoadError(true); }
         catch { setLoadError(true); } finally { setLoading(false); }
       }}>{loading ? "Henter …" : "Hent lagret versjon"}</button>
       {(mutation.isError || loadError) && <p className="save-error" role="alert">{loadError ? "Kunne ikke hente tavlen. Utkastet ditt er beholdt." : mutation.error?.message}</p>}
+      {followup && <section className="board-followup" aria-label="Etter lagring" aria-busy={followup.state === "loading"}>
+        {followup.state === "loading" && <p role="status">Tavlen er lagret. Ser etter tilgjengelige spor …</p>}
+        {followup.state === "error" && <><p role="alert">Tavlen er lagret. Kunne ikke hente tilgjengelige spørsmål og undersøkelser.</p><button onClick={() => void refreshFollowup(followup.baseline)}>Prøv å hente spor igjen</button></>}
+        {followup.state === "ready" && <><p role="status">{followup.actions.length ? followup.baseline ? "Nye spor å følge opp" : "Tilgjengelige spor å følge opp" : "Tavlen er lagret. Ingen nye spor akkurat nå."}</p>
+          {followup.actions.map(action => <Link key={action.id} to={action.personId ? `../people/${encodeURIComponent(action.personId)}` : ".."}>{action.label} ↗</Link>)}</>}
+      </section>}
     </div>
     <div className="board-workspace"><section className="board-tools" aria-label="Arbeidsverktøy">{!notesOnly && <nav className="board-tool-tabs" aria-label="Tavleverktøy">{([["sources", "Kilder"], ["notes", "Notater"], ["connections", "Koblinger"]] as const).map(([id, title]) => <button key={id} aria-pressed={tool === id} onClick={() => setTool(id)}>{title}</button>)}</nav>}
       <div className="board-tool-scroll" tabIndex={0} role="region" aria-label="Valgt tavleverktøy">

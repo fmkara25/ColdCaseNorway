@@ -53,9 +53,13 @@ test("comparing a note with a person preserves the board and opens an authorized
   await expect(page.getByRole("region", { name:"Din hypotese" })).toContainText("Maria må forklare notatet.");
   await expect(page.getByRole("button", { name:"Lagre koblingen på tavlen" })).toBeDisabled();
   const other = await browser.newContext({ baseURL }); const otherPage = await other.newPage();
+  // The unavailable-document view can render before the layout has opened its guest session.
+  const sessionReady = otherPage.waitForResponse(response => response.url().endsWith(session + "/progress") && response.status() === 200);
   await otherPage.goto("/cases/1999-1218/evidence/ingrid-note?compare=1&with=person%3Amaria");
   await expect(otherPage.getByRole("heading", { name:"Dokumentet er ikke tilgjengelig i denne saken." })).toBeVisible();
-  const privateBoard = await (await other.request.get(session)).json();
+  await sessionReady;
+  const privateResponse = await other.request.get(session); expect(privateResponse.status()).toBe(200);
+  const privateBoard = await privateResponse.json();
   expect(privateBoard.board.notes).toEqual([]); expect(privateBoard.board.connections).toEqual([]); await other.close();
 });
 
