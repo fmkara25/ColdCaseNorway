@@ -39,6 +39,17 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<GameplayView>();
 
 var app = builder.Build();
+var initialize = app.Configuration.GetValue<bool>("ColdCase:Initialize");
+if (app.Environment.IsDevelopment() || initialize)
+{
+    using var scope = app.Services.CreateScope();
+    var database = scope.ServiceProvider.GetRequiredService<CaseDbContext>();
+    await database.Database.MigrateAsync();
+    await CaseSeed.InitializeDevelopmentAsync(database);
+}
+if (initialize) return;
+
+var serveFrontend = app.Configuration.GetValue<bool>("ColdCase:ServeFrontend");
 app.UseExceptionHandler(handler => handler.Run(async context =>
 {
     await Results.Problem(statusCode: 500, title: "Kunne ikke hente saksopplysningene.",
@@ -50,14 +61,8 @@ app.Use(async (context, next) =>
     context.Response.Headers["Cache-Control"] = "no-store";
     await next(context);
 });
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    using var scope = app.Services.CreateScope();
-    var database = scope.ServiceProvider.GetRequiredService<CaseDbContext>();
-    await database.Database.MigrateAsync();
-    await CaseSeed.InitializeDevelopmentAsync(database);
-}
+if (app.Environment.IsDevelopment()) app.MapOpenApi();
+if (serveFrontend) app.UseStaticFiles();
 app.MapGet("/api/health", () => Results.Ok(new { status = "healthy", service = "ColdCase.Api" }));
 app.MapGet("/api/cases", async (ICaseRepository cases, CancellationToken cancellationToken) =>
     Results.Ok((await cases.ListAsync(cancellationToken)).Select(x => new
@@ -99,6 +104,11 @@ app.MapInvestigationEndpoints();
 app.MapGameplayEndpoints();
 app.MapReconstructionEndpoints();
 app.MapVerdictEndpoints();
+if (serveFrontend)
+{
+    app.MapFallback("/api/{**path}", () => Results.NotFound());
+    app.MapFallbackToFile("index.html");
+}
 app.Run();
 
 public partial class Program { }
