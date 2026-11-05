@@ -38,6 +38,7 @@ export const questions: Record<string, Question> = {
     ],
   },
   witness: {
+    image: "/images/skardal-market-1999.webp", imageName: "Butikken i Skardal",
     title: "Hva kan observasjonen brukes til?",
     source: "Ca. 22.16 satte Ingrid seg inn i en mørk stasjonsvogn. Vitnet så ingen tvang og kunne ikke identifisere føreren.",
     choices: [

@@ -63,3 +63,5 @@
 @media (prefers-reduced-motion: reduce) { .simple-question, .simple-result { animation: none; } }
 .simple-diagram { display: block; width: 100%; height: auto; max-height: 110px; margin: 10px 0; }
 .simple-diagram text { fill: currentColor; font: 12px system-ui, sans-serif; }
+.simple-source .archive-image.landscape { width: 100%; }
+.simple-source .archive-image.landscape img { width: 100%; height: auto; }

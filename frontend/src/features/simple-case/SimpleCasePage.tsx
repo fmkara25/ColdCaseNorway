@@ -111,7 +111,7 @@ export function SimpleCasePage() {
       {question && <div className="simple-question" key={save.screen}>
         <figure className="simple-source">
           <span>{question.evidenceId ? ticket?.title ?? "Saksdokument" : "Fra saksdokumentene"}</span>
-          {question.image && <ArchiveImage src={question.image} name={question.imageName ?? ""} compact />}
+          {question.image && <ArchiveImage src={question.image} name={question.imageName ?? ""} landscape={save.screen === "witness"} compact={save.screen !== "witness"} />}
           {exhibit && <dl className="simple-exhibit">{exhibit.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>}
           <CaseDiagram scene={save.screen} />
           <blockquote>{question.source}</blockquote>
