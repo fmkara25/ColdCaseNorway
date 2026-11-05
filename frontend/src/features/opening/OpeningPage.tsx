@@ -80,8 +80,9 @@ export function OpeningPage() {
   const companyRecords = history("company-records");
   const mileage = history("mileage");
   const mileageReply = history("lars-mileage");
-  const stage = mileageReply ? 7 : companyRecords ? 6 : checkedRoute ? 5 : openedMarket ? 4 : spoke ? 3 : note ? 2 : 1;
-  const heading = ["Velg ditt første spor", "Samtalen med Maria", "En plan eller en reise?", "Nytt spor ved butikken", "Kjøretøysporet åpnes", "Kjøreboken for bil 14", "En mulig utrykning"][stage - 1];
+  const account = history("lars-events");
+  const stage = account ? 8 : mileageReply ? 7 : companyRecords ? 6 : checkedRoute ? 5 : openedMarket ? 4 : spoke ? 3 : note ? 2 : 1;
+  const heading = ["Velg ditt første spor", "Samtalen med Maria", "En plan eller en reise?", "Nytt spor ved butikken", "Kjøretøysporet åpnes", "Kjøreboken for bil 14", "Prøv forklaringen", "Bygg din egen forklaring"][stage - 1];
   const shown = source(inspect ?? "");
   function card(id: string, select = false) {
     const item = source(id);
@@ -103,7 +104,7 @@ export function OpeningPage() {
       <span>SKARDAL · 18. DESEMBER 1999</span>
     </div>
     <div className="opening-work">
-      <p className="eyebrow" role="status">ETTERFORSKNING · {stage} / 7</p>
+      <p className="eyebrow" role="status">ETTERFORSKNING · {stage} / 8</p>
       <h1>{heading}</h1>
       <fieldset disabled={command.isPending}>
         {stage === 1 && <>
@@ -203,9 +204,77 @@ export function OpeningPage() {
           </>}
         </>}
         {stage === 7 && <>
-          <p className="opening-reply">{mileageReply?.response}</p>
-          {card("emergency-claim")}
-          <Link className="primary-button" to={root}>Tilbake til saksoversikten ↗</Link>
+          <p className="opening-reply">{(history("lars-damage") ?? history("lars-receipt") ?? mileageReply)?.response}</p>
+          {!history("check-emergency") ? <>
+            <p>Hvilken kilde kan du bruke til å kontrollere om det var et ekstra oppdrag?</p>
+            <div className="opening-cards">{card("emergency-claim")}{card("work-order")}{card("card-transaction")}</div>
+            <button onClick={() => run(async () => {
+              await review("emergency-claim", "work-order");
+              await act("check-emergency");
+            })}>Kontroller vaktloggen og arbeidsordrene</button>
+            <button onClick={() => setHint("En korttransaksjon viser et kjøp. Se etter kilder som registrerer oppdrag.")}>Bruk korttransaksjonen alene</button>
+          </> : !history("terminal") ? <>
+            <p>{history("check-emergency")?.response}</p>
+            {card("card-transaction")}
+            <button onClick={() => run(async () => {
+              await review("card-transaction");
+              await act("terminal");
+            })}>Slå opp terminalnummeret på bilaget</button>
+          </> : !history("lars-receipt") ? <>
+            <p>Legg fram kildene og be Lars forklare kjøpet og turen.</p>
+            <div className="opening-cards">{card("no-extra-job")}{card("station-receipt")}</div>
+            <button onClick={() => run(async () => {
+              await review("no-extra-job", "station-receipt");
+              await pair(caseId, "person:lars", "evidence:station-receipt", "Kjøpet og den manglende utrykningen");
+              await act("lars-receipt");
+            })}>Legg fram kvitteringen og vaktloggen</button>
+          </> : !history("lars-damage") ? <>
+            <p>Velg to kilder om bilens tilstand etter turen.</p>
+            <div className="opening-cards">{["bumper-report", "clean-vehicle", "station-receipt"].map(id => card(id, true))}</div>
+            <button onClick={() => {
+              const relevant = selected.filter(id => ["bumper-report", "clean-vehicle", "station-receipt"].includes(id));
+              if (relevant.length !== 2 || !relevant.includes("bumper-report") || !relevant.includes("clean-vehicle")) {
+                setHint("Se etter observasjoner av selve bilen. Kvitteringen viser hva som ble kjøpt.");
+                return;
+              }
+              run(async () => {
+                await review("bumper-report", "clean-vehicle");
+                await pair(caseId, "evidence:bumper-report", "evidence:clean-vehicle", "Bilens tilstand etter turen");
+                await act("lars-damage");
+              });
+            }}>Spør Lars om bilens tilstand</button>
+          </> : <>
+            <div className="opening-cards">{card("lars-slip")}{card("lars-statement")}</div>
+            <h2>Hva i svaret bør du følge opp?</h2>
+            <button onClick={() => run(async () => {
+              await review("lars-slip");
+              await act("lars-events");
+            })}>Han beskrev påstigningen, selv om han sa at han ikke hadde møtt Ingrid.</button>
+            <button onClick={() => setHint("Sammenlign det Lars sa om møtet med det han nå beskriver.")}>Skaderapporten fastslår hvor bilen traff noe.</button>
+          </>}
+        </>}
+        {stage === 8 && <>
+          <p>Lars har gitt en ny forklaring. Prøv den mot det du har funnet. Velg hendelsesforløpet, kildene og ruten du mener henger sammen.</p>
+          {card("lars-account")}
+          {!history("phone-lookup") ? <button onClick={() => run(async () => {
+            await review("phone-log", "jonas-statement");
+            await act("phone-lookup");
+          })}>Kontroller hvem Ingrid snakket med kl. 21.47</button>
+          : !history("jonas-call") ? <>
+            <p>Før du samler teorien, prøv den siste telefonsamtalen mot Jonas’ forklaring.</p>
+            <div className="opening-cards">{card("phone-match")}{card("jonas-statement")}</div>
+            <button onClick={() => run(async () => {
+              await review("phone-match", "jonas-statement");
+              await pair(caseId, "evidence:phone-match", "evidence:jonas-statement", "Samtalen kl. 21.47");
+              await act("jonas-call");
+            })}>Be Jonas forklare samtalen kl. 21.47</button>
+          </> : <>
+            <p className="opening-reply">{history("jonas-call")?.response}</p>
+            {card("ingrid-letter")}
+            {!reviewed("ingrid-letter") || !reviewed("lars-account") ?
+              <button onClick={() => run(() => review("ingrid-letter", "lars-account"))}>Ta med brevet og forklaringen i vurderingen</button> :
+              <Link className="primary-button" to={root + "/reconstruction"}>Bygg teorien din ↗</Link>}
+          </>}
         </>}
       </fieldset>
       {shown && <aside className="opening-document" aria-label="Kildeutdrag"><strong>{shown.title}</strong><p>{shown.body}</p>
