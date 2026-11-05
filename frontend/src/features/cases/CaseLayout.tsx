@@ -9,7 +9,7 @@ import { Feedback } from "./CasePages";
 export function CaseLayout() {
   const { caseId } = useParams();
   const { pathname } = useLocation();
-  const focusedStage = /\/(?:people|evidence|timeline|map|board|notes|reconstruction)(?:\/|$)/.test(pathname);
+  const focusedStage = /\/(?:people|evidence|timeline|map|board|notes|reconstruction|opening)(?:\/|$)/.test(pathname);
   const desk = pathname.replace(/\/$/, "") === `/cases/${encodeURIComponent(caseId ?? "")}`;
   const query = useQuery({ queryKey: ["cases", caseId], queryFn: ({ signal }) => fetchJson<CaseFile>(`/api/cases/${encodeURIComponent(caseId ?? "")}`, signal, isCaseFile) });
   const progress = useProgress(caseId ?? "", query.isSuccess);
