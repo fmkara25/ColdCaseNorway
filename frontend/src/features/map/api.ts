@@ -4,6 +4,11 @@ export interface MapLocation { id: string; name: string; description: string; x:
 export interface MapRoad { id: string; fromLocationId: string; toLocationId: string; meters: number; walkMinutesMin: number; walkMinutesMax: number; driveMinutesMin: number; driveMinutesMax: number }
 export interface MapGraph { locations: MapLocation[]; roads: MapRoad[] }
 export interface RouteEstimate { meters: number; walkMinutesMin: number; walkMinutesMax: number; driveMinutesMin: number; driveMinutesMax: number }
+export function isConnectedRoute(path: string[], graph: MapGraph): boolean {
+  return path.length >= 2 && path.length <= 24 && path.every(id => graph.locations.some(point => point.id === id)) &&
+    path.slice(1).every((id, index) => graph.roads.some(road =>
+      road.fromLocationId === path[index] && road.toLocationId === id || road.toLocationId === path[index] && road.fromLocationId === id));
+}
 function record(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }
 function positive(value: unknown): value is number { return Number.isInteger(value) && (value as number) > 0; }
 export function isRouteEstimate(value: unknown): value is RouteEstimate {
