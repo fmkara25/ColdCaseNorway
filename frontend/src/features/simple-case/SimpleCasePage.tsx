@@ -5,13 +5,14 @@ import { ArchiveImage } from "../../components/ArchiveImage";
 import { fetchJson, isCaseFile, type CaseFile } from "../cases/api";
 import { Feedback } from "../cases/CasePages";
 import { isEvidenceList, type Evidence } from "../evidence/api";
-import { evidenceChoices, questions, suspects } from "./questions";
+import { evidenceChoices, exhibits, nextQuestion, questions, suspects, totalQuestions } from "./questions";
+import { CaseDiagram } from "./CaseDiagram";
 import "./simple-case.css";
 
 const root = "/api/cases/1999-1218";
-const saveKey = "cold-case:1999-1218:simple:v1";
-interface Verdict { correct: boolean; explanation: string }
-interface Save { screen: string; answer?: number; suspect?: string; evidence?: string; verdict?: Verdict }
+const saveKey = "cold-case:1999-1218:simple:v2";
+interface Verdict { correct: boolean; explanation: string; eventCorrect?: boolean }
+interface Save { screen: string; visited?: string[]; event?: string; answer?: number; suspect?: string; evidence?: string; verdict?: Verdict }
 const initial: Save = { screen: "file" };
 function isVerdict(value: unknown): value is Verdict {
   return !!value && typeof value === "object" && "correct" in value && typeof value.correct === "boolean" &&
@@ -21,6 +22,9 @@ function load(): Save {
   try {
     const value = JSON.parse(localStorage.getItem(saveKey) ?? "null") as Save | null;
     if (!value || !["file", "decision", "result", ...Object.keys(questions)].includes(value.screen)) return initial;
+    if (value.visited !== undefined && (!Array.isArray(value.visited) || value.visited.length > totalQuestions ||
+      !value.visited.every(id => Object.hasOwn(questions, id)) || new Set(value.visited).size !== value.visited.length)) return initial;
+    if (value.event !== undefined && !["accident", "planned", "departure"].includes(value.event)) return initial;
     if (value.suspect !== undefined && !suspects.some(person => person.id === value.suspect)) return initial;
     if (value.evidence !== undefined && value.evidence !== "" && !evidenceChoices.includes(value.evidence)) return initial;
     if (value.screen === "result" && (!isVerdict(value.verdict) || !value.suspect)) return initial;
@@ -61,7 +65,7 @@ export function SimpleCasePage() {
       const response = await fetch(root + "/verdict", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-ColdCase-Request": "1" },
-        body: JSON.stringify({ suspectId: save.suspect }),
+        body: JSON.stringify({ suspectId: save.suspect, eventId: save.event || undefined }),
       });
       if (!response.ok) throw new Error();
       const verdict: unknown = await response.json();
@@ -76,6 +80,8 @@ export function SimpleCasePage() {
   }
 
   const question = Object.hasOwn(questions, save.screen) ? questions[save.screen] : undefined;
+  const step = (save.visited?.length ?? 0) + 1;
+  const exhibit = exhibits[save.screen];
   const choice = save.answer === undefined ? undefined : question?.choices[save.answer];
   const ticket = evidence.data?.find(item => item.id === "bus-ticket");
   const title = save.screen === "file" ? file.data?.title : question?.title ??
@@ -87,8 +93,8 @@ export function SimpleCasePage() {
     {!file.isSuccess || !evidence.isSuccess ? <Feedback error={file.error ?? evidence.error}
       retry={() => { void file.refetch(); void evidence.refetch(); }} /> : <>
       <div className="simple-progress" aria-label="Fremdrift">
-        <span>{question ? `Etterforskning · ${question.step} av 5` : save.screen === "file" ? "Saksmappe" : save.screen === "decision" ? "Din avgjørelse" : "Resultat"}</span>
-        <progress aria-label="Fremdrift i saken" max={7} value={question?.step ?? (save.screen === "file" ? 0 : save.screen === "decision" ? 6 : 7)} />
+        <span>{question ? `Etterforskning · ${step} av ${totalQuestions}` : save.screen === "file" ? "Saksmappe" : save.screen === "decision" ? "Din avgjørelse" : "Resultat"}</span>
+        <progress aria-label="Fremdrift i saken" max={totalQuestions + 2} value={question ? step : save.screen === "file" ? 0 : save.screen === "decision" ? totalQuestions + 1 : totalQuestions + 2} />
       </div>
       <h1 ref={heading} tabIndex={-1}>{title}</h1>
       {save.screen === "file" && <>
@@ -102,19 +108,25 @@ export function SimpleCasePage() {
           <li key={person.id}><ArchiveImage src={person.image} name={person.name} compact /><div><strong>{person.name}</strong><small>{person.role}</small></div></li>)}</ul>
         <button className="simple-primary" onClick={() => update({ screen: "ticket" })}>Start etterforskningen</button>
       </>}
-      {question && <div className="simple-question">
+      {question && <div className="simple-question" key={save.screen}>
         <figure className="simple-source">
           <span>{question.evidenceId ? ticket?.title ?? "Saksdokument" : "Fra saksdokumentene"}</span>
-          {question.image && <ArchiveImage src={question.image} name={save.screen === "maria" ? "Maria Nygård" : "Erik Halvorsen"} compact />}
+          {question.image && <ArchiveImage src={question.image} name={question.imageName ?? ""} compact />}
+          {exhibit && <dl className="simple-exhibit">{exhibit.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>}
+          <CaseDiagram scene={save.screen} />
           <blockquote>{question.source}</blockquote>
         </figure>
         <div className="simple-choices">
           {question.choices.map((option, index) => <button key={option.label} aria-pressed={save.answer === index}
             disabled={!!choice} onClick={() => update({ ...save, answer: index })}>{option.label}</button>)}
-          {choice && <><p role="status">{choice.feedback}</p><button className="simple-primary" onClick={() => update({ screen: choice.next })}>Fortsett</button></>}
+          {choice && <><p role="status">{choice.feedback}</p><button className="simple-primary" onClick={() => {
+            const visited = [...(save.visited ?? []), save.screen];
+            update({ screen: nextQuestion(save.screen, choice.next, visited), visited });
+          }}>Fortsett</button></>}
         </div>
       </div>}
       {save.screen === "decision" && <div className="simple-decision">
+        <div className="simple-recap"><h2>Dette vet du</h2><p>Reisen var planlagt. Vitnet så en påstigning rundt 22.16. Kjøreboken, kjøpet kl. 22.52 og forklaringene gir ulike deler av bildet.</p></div>
         <fieldset disabled={pending}><legend className="sr-only">Velg én person</legend>
           {suspects.map(person => <label key={person.id}>
             <input type="radio" name="suspect" value={person.id} checked={save.suspect === person.id}
@@ -127,6 +139,11 @@ export function SimpleCasePage() {
             <option value="">Ingen valgt</option>{evidenceChoices.map(item => <option key={item}>{item}</option>)}
           </select>
         </label>
+        <label className="simple-support">Hva tror du utløste hendelsen? (valgfritt)
+          <select disabled={pending} value={save.event ?? ""} onChange={event => update({ ...save, event: event.target.value || undefined })}>
+            <option value="">Ingen vurdering</option><option value="accident">En trafikkulykke</option><option value="planned">Et planlagt angrep</option><option value="departure">En frivillig avreise</option>
+          </select>
+        </label>
         <button className="simple-primary" disabled={!save.suspect || pending} onClick={() => void submit()}>Bekreft avgjørelsen</button>
         {pending && <p className="simple-wait" role="status">Vurderer avgjørelsen …</p>}
         {error && <p role="alert">{error}</p>}
@@ -134,6 +151,8 @@ export function SimpleCasePage() {
       {save.screen === "result" && save.verdict && <div className="simple-result">
         <p>Du valgte <strong>{suspects.find(person => person.id === save.suspect)?.name}</strong>.</p>
         {save.evidence && <p>Din valgte kilde: {save.evidence}.</p>}
+        {typeof save.verdict.eventCorrect === "boolean" && <p>{save.verdict.eventCorrect ? "Du identifiserte også hva som utløste hendelsen." : "Teorien din om hva som utløste hendelsen, passer ikke med rekonstruksjonen."}</p>}
+        <figure className="simple-ending-image"><ArchiveImage src={file.data.coverImagePath} name={file.data.location} landscape /></figure>
         <p>{save.verdict.explanation}</p>
         <button className="simple-primary" onClick={() => update(initial)}>Spill på nytt</button>
       </div>}

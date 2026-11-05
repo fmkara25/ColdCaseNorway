@@ -13,14 +13,23 @@ for (const correct of [true, false]) {
     await expect(page.getByRole("status")).toContainText(correct ? "Billetten viser en plan" : "Billetten ble ikke brukt");
     const next = page.getByRole("button", { name: "Fortsett", exact: true });
     await next.click();
+    const answer = async (name: string) => {
+      await page.getByRole("button", { name, exact: true }).click();
+      await next.click();
+    };
+    await answer(correct ? "La henne forklare med egne ord" : "Legg fram notatet og spør om bagen");
+    await answer(correct ? "Finn ut hvem Ingrid snakket med" : "Følg observasjonen ved butikken");
+    const reviewJonas = () => answer("Han ville skjule forholdet og samtalen");
+    if (correct) await reviewJonas();
+    await answer("Avgrense tidspunktet og lete etter bilen");
+    await answer("Tidsrommet virker for kort");
     if (!correct) {
-      await expect(page.getByRole("heading", { name: "Hva kan Marias opplysning støtte?" })).toBeVisible();
-      await page.getByRole("button", { name: "Maria vet hvor Ingrid endte" }).click();
-      await next.click();
+      await page.reload();
+      await expect(page.getByRole("heading", { name: "Hva forklarer Jonas’ løgn best?" })).toBeVisible();
+      await reviewJonas();
     }
-    for (const answer of ["Vitnet kunne ikke si hvem som kjørte", "Tidsrommet virker for kort", "Omtrent 32 km", "Det ekstra oppdraget er ubekreftet"]) {
-      await page.getByRole("button", { name: answer, exact: true }).click();
-      await next.click();
+    for (const choice of ["Omtrent 32 km", "Det ekstra oppdraget er ubekreftet", "Sammenhold kjøpet, skaden og kjøringen med forklaringen", "Han beskriver påstigningen etter å ha benektet kontakt"]) {
+      await answer(choice);
     }
     await expect(page.getByRole("heading", { name: "Hvem mener du er ansvarlig?" })).toBeVisible();
     await expect(page.getByText(/Ingrid ble frivillig med Lars/)).toHaveCount(0);
@@ -28,6 +37,7 @@ for (const correct of [true, false]) {
     await expect(confirm).toBeDisabled();
     await page.getByRole("radio", { name: correct ? "Lars Viken" : "Erik Halvorsen" }).check();
     await page.getByLabel("Kilde som støtter valget").selectOption("Tidsopplysningene");
+    await page.getByLabel("Hva tror du utløste hendelsen?").selectOption(correct ? "accident" : "planned");
     if (!correct) {
       await page.route("**/verdict", route => route.fulfill({ status: 503 }));
       await confirm.click();
@@ -39,7 +49,8 @@ for (const correct of [true, false]) {
     await expect(page.getByRole("status")).toContainText("Vurderer avgjørelsen");
     const result = page.getByRole("heading", { name: correct ? "Du fant den ansvarlige" : "Du valgte feil person" });
     await expect(result).toBeVisible();
-    await expect(page.getByText(/lot være å tilkalle hjelp/)).toBeVisible();
+    await expect(page.getByText(/la være å tilkalle hjelp/)).toBeVisible();
+    await expect(page.getByText(correct ? /identifiserte også/ : /passer ikke med rekonstruksjonen/)).toBeVisible();
     await page.reload();
     await expect(result).toBeVisible();
     await page.getByRole("button", { name: "Spill på nytt" }).click();
