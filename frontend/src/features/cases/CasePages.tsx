@@ -21,7 +21,7 @@ export function CaseArchive() {
         <div className="archive-cover"><ArchiveImage src={file.coverImagePath} name={file.location} landscape /><span>SAK {file.id}</span></div>
         <div className="case-content"><div className="case-meta"><span>SAK {file.id}</span><span className="status">Uoppklart</span></div>
           <h2>{file.title}</h2><p>{file.summary}</p><dl><div><dt>Savnet</dt><dd>{file.missingPerson}, {file.age} år</dd></div><div><dt>Sted</dt><dd>{file.location}</dd></div><div><dt>Dato</dt><dd>{formatDate(file.disappearanceDate)}</dd></div></dl>
-          <Link className="primary-button" to={`/cases/${encodeURIComponent(file.id)}`}>Åpne sak <span aria-hidden="true">↗</span></Link>
+          <Link className="primary-button" to={file.id === "1999-1218" ? "/play/1999-1218" : `/cases/${encodeURIComponent(file.id)}`}>Åpne sak <span aria-hidden="true">↗</span></Link>
         </div>
       </article>)}</div>}
     <footer>Alle personer og hendelser i spillet er fiktive.</footer>

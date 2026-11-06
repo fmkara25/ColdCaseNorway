@@ -8,11 +8,13 @@ import { TimelinePage } from "../features/timeline/TimelinePage";
 import { MapPage } from "../features/map/MapPage";
 import { BoardPage } from "../features/board/BoardPage";
 import { ReconstructionPage } from "../features/reconstruction/ReconstructionPage";
+import { SimpleCasePage } from "../features/simple-case/SimpleCasePage";
 import App from "../App";
 import { CaseOverview } from "../features/cases/CasePages";
 
 export const router = createBrowserRouter([{ element: <RouteFrame />, errorElement: <RouteError />, children: [
   { path: "/", element: <App /> },
+  { path: "/play/1999-1218", element: <SimpleCasePage /> },
   { path: "/cases/:caseId", element: <CaseLayout />, children: [
     { index: true, element: <CaseOverview /> },
     { path: "notes", element: <BoardPage notesOnly /> },
