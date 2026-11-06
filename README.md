@@ -1,16 +1,16 @@
 # Cold Case Norway
 
-A full-stack, Norwegian-language mystery game set in a fictional town in Trøndelag. Reopen the 1999 disappearance of Ingrid Solberg, examine the evidence and decide what happened.
-
 **[Play the live demo](https://coldcasenorway.onrender.com)** · The first request can take longer while the free hosting instance wakes up.
+
+A full-stack, Norwegian-language mystery game set in a fictional town in Trøndelag. Reopen the 1999 disappearance of Ingrid Solberg, examine the evidence and decide what happened.
 
 ![React](https://img.shields.io/badge/React-frontend-263747) ![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-.NET%2010-263747) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-database-263747)
 
 ## Gameplay
 
-In the live demo, open the case file, follow a guided investigation in Norwegian Bokmål, and compare photographs, statements and records. Your answers guide the investigation. Once you have enough evidence, submit a verdict and see how it compares with the case's resolution. The case is authored and deterministic.
+Open the case file, follow a guided investigation in Norwegian Bokmål, and compare photographs, statements and records. Choose which lead to pursue first, then submit a suspect verdict and an optional theory about what happened. The API evaluates the verdict. Guided progress is saved in the browser, so you can resume or replay the case.
 
-The repository's workstation flow also includes a source-linked timeline, route comparison, a board and notes, interviews, and a final reconstruction. The hosted guided flow and the workstation are different presentations of Case 01.
+The repository also contains the original investigation workstation with a source-linked timeline, route comparison, a board and notes, interviews, and a final reconstruction.
 
 ## Technology stack
 
@@ -87,7 +87,7 @@ From `frontend/`, run `npm run lint`, `npm test` and `npm run build`. From the r
 
 ## Deployment
 
-The live demo uses a Docker-based Render Free web service for the compiled frontend and API, with Neon Free providing persistent PostgreSQL storage. The database is prepared separately from the web process. Database credentials are configured as hosting secrets.
+The live demo uses a Docker-based Render Free web service for the compiled frontend and API, with Neon Free providing persistent PostgreSQL storage. ASP.NET Core serves the compiled React build and the API from the same container. The database is prepared separately from the web process. Database credentials are configured as hosting secrets.
 
 ## Project structure
 
@@ -99,6 +99,7 @@ backend/
   ColdCase.Domain/            Domain models
   ColdCase.Infrastructure/    EF Core persistence and migrations
   ColdCase.Tests/             Backend tests
+deploy/                       Production Docker image
 docs/                         Development, playtest and asset documentation
 scripts/                      Container smoke checks
 .github/workflows/            GitHub Actions CI
